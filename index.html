@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Beauty Notepad Web App</title>
-  <!-- Pretendard 폰트 로드 -->
+  <title>Homerlex</title>
+  <!-- Pretendard 폰트 로드 (출처: Pretendard GitHub) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard/dist/web/static/pretendard.css">
   <style>
-    /* 뉴모피즘 및 글래스모피즘 스타일 적용 */
+    /* 기본 스타일 */
     body {
       font-family: 'Pretendard', sans-serif;
       background: linear-gradient(135deg, #e0e5ec, #f0f0f3);
@@ -19,9 +19,9 @@
       gap: 10px;
       margin-bottom: 20px;
       flex-wrap: wrap;
+      align-items: center;
     }
-    .toolbar button,
-    .toolbar label {
+    .toolbar button {
       padding: 10px 20px;
       border: none;
       border-radius: 10px;
@@ -29,13 +29,36 @@
       box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff;
       cursor: pointer;
       font-size: 14px;
-      font-weight: bold; /* 메뉴 텍스트 볼드 */
+      font-family: 'Pretendard', sans-serif;
+      font-weight: 600; /* Pretendard Semibold */
       outline: none;
       transition: box-shadow 0.2s ease;
     }
-    .toolbar button:active,
-    .toolbar label:active {
+    .toolbar button:hover {
       box-shadow: inset 5px 5px 10px #a3b1c6, inset -5px -5px 10px #ffffff;
+    }
+    /* 원형 컬러피커 */
+    .toolbar input[type="color"] {
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 50%;
+      padding: 0;
+      margin-left: 10px;
+      cursor: pointer;
+      background: transparent;
+    }
+    /* 저장 확장자 선택 */
+    .toolbar select {
+      padding: 8px;
+      border: none;
+      border-radius: 10px;
+      background: #e0e5ec;
+      box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff;
+      font-family: 'Pretendard', sans-serif;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
     }
     .editor {
       width: 100%;
@@ -51,95 +74,193 @@
       overflow: auto;
       position: relative;
     }
-    /* 글래스모피즘 하이라이트 효과 */
+    /* Bold 텍스트 강제 Pretendard Semibold */
+    .editor b,
+    .editor strong {
+      font-weight: 600;
+    }
+    /* Fluent Design 스타일의 하이라이트 (기본) */
     .highlight {
-      background: rgba(255, 255, 255, 0.3);
       border-radius: 8px;
       padding: 2px 4px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      backdrop-filter: blur(5px);
-      -webkit-backdrop-filter: blur(5px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      color: #000;
-    }
-    /* 숨김 처리할 input 스타일 */
-    input[type="file"],
-    input[type="color"] {
-      display: none;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      position: relative;
     }
   </style>
 </head>
 <body>
   <div class="toolbar">
-    <button id="btnBold">Bold</button>
-    <button id="btnColor">Text Color</button>
-    <button id="btnHighlight">Highlight</button>
-    <button id="btnSave">Save</button>
-    <label for="fontInput">Import Font</label>
-    <input type="file" id="fontInput" accept=".ttf,.otf">
-    <input type="color" id="colorPicker">
-    <input type="color" id="highlightPicker">
+    <button id="btnBold" title="Bold (Ctrl+B)">Bold</button>
+    <button id="btnUnderline" title="Underline (Ctrl+U)">Underline</button>
+    <button id="btnHighlight" title="Apply Highlight (Ctrl+H)">Highlight</button>
+    <button id="btnRemoveHighlight" title="Remove Highlight (Ctrl+R)">Remove Highlight</button>
+    <!-- 원형 컬러피커: 하이라이트 색상 선택 -->
+    <input type="color" id="colorHighlight" title="Choose Highlight Color" value="#007AFF">
+    <!-- 저장 확장자 선택 -->
+    <select id="saveType" title="Save as (Ctrl+S)">
+      <option value="txt">TXT</option>
+      <option value="hom" selected>HOM</option>
+    </select>
+    <button id="btnSave" title="Save (Ctrl+S)">Save</button>
+    <button id="btnUndo" title="Undo (Ctrl+Z)">Undo</button>
+    <button id="btnRedo" title="Redo (Ctrl+Y)">Redo</button>
+    <button id="btnLoad" title="Load File (Ctrl+O)">Load</button>
+    <!-- 숨김 파일 입력: HOM/TXT 파일 불러오기 -->
+    <input type="file" id="fileLoad" accept=".hom,.txt" style="display: none;">
   </div>
-  
-  <!-- contenteditable div를 사용하여 편집 가능한 영역 -->
+
   <div class="editor" contenteditable="true" id="editor">
     여기에 메모를 입력하세요...
   </div>
 
   <script>
-    // Bold 버튼: 선택된 텍스트를 굵게 처리
-    document.getElementById('btnBold').addEventListener('click', function(){
-      document.execCommand('bold');
-    });
+    // 헬퍼 함수: HEX 값을 rgba 문자열로 변환 (alpha 포함)
+    function hexToRgba(hex, alpha) {
+      hex = hex.replace('#', '');
+      if (hex.length === 3) {
+        hex = hex.split('').map(c => c + c).join('');
+      }
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
     
-    // Text Color 버튼: 색상 선택 input을 활성화 후 선택된 색상을 텍스트에 적용
-    document.getElementById('btnColor').addEventListener('click', function(){
-      document.getElementById('colorPicker').click();
-    });
-    document.getElementById('colorPicker').addEventListener('change', function(){
-      const color = this.value;
-      document.execCommand('foreColor', false, color);
-    });
-
-    // Highlight 버튼: 선택된 텍스트에 글래스모피즘 효과 적용
-    document.getElementById('btnHighlight').addEventListener('click', function() {
+    // 하이라이트 스타일 업데이트 (선택한 컬러에 따라)
+    function updateHighlightStyle(element) {
+      const color = document.getElementById('colorHighlight').value;
+      element.style.backgroundColor = hexToRgba(color, 0.2);
+      element.style.boxShadow = `0px 0px 12px ${hexToRgba(color, 0.4)}`;
+      element.style.border = `1px solid ${hexToRgba(color, 0.3)}`;
+      element.style.color = '#000';
+    }
+    
+    // 하이라이트 적용: 이미 하이라이트된 경우 업데이트, 아니면 새로 래핑
+    function applyHighlight() {
       const selection = window.getSelection();
-      if (selection.isCollapsed) return; // 선택된 텍스트가 없으면 실행 안 함
-
+      if (selection.isCollapsed) return;
       const range = selection.getRangeAt(0);
-      const selectedText = range.extractContents();
+      let container = range.commonAncestorContainer;
+      if (container.nodeType === Node.TEXT_NODE) {
+        container = container.parentElement;
+      }
+      if (container && container.classList && container.classList.contains('highlight')) {
+        // 이미 하이라이트된 영역이면 색상 업데이트
+        updateHighlightStyle(container);
+        selection.removeAllRanges();
+        return;
+      }
       const span = document.createElement('span');
       span.className = 'highlight';
-      span.appendChild(selectedText);
+      updateHighlightStyle(span);
+      span.appendChild(range.extractContents());
       range.insertNode(span);
-    });
-
-    // Save 버튼: 에디터의 내용을 HTML 파일로 저장
-    document.getElementById('btnSave').addEventListener('click', function(){
-      const content = document.getElementById('editor').innerHTML;
-      const blob = new Blob([content], { type: 'text/html' });
+      selection.removeAllRanges();
+    }
+    
+    // 하이라이트 해제: 선택된 영역이 하이라이트인 경우 태그 제거
+    function removeHighlight() {
+      const selection = window.getSelection();
+      if (selection.isCollapsed) return;
+      const range = selection.getRangeAt(0);
+      let container = range.commonAncestorContainer;
+      if (container.nodeType === Node.TEXT_NODE) {
+        container = container.parentElement;
+      }
+      if (container && container.classList && container.classList.contains('highlight')) {
+        const parent = container.parentNode;
+        while (container.firstChild) {
+          parent.insertBefore(container.firstChild, container);
+        }
+        parent.removeChild(container);
+        selection.removeAllRanges();
+      }
+    }
+    
+    // 저장 기능: 선택한 확장자에 따라 저장 (TXT: innerText, HOM: innerHTML)
+    function saveContent() {
+      const editor = document.getElementById('editor');
+      const ext = document.getElementById('saveType').value;
+      let content = '';
+      if (ext === 'txt') {
+        content = editor.innerText;
+      } else if (ext === 'hom') {
+        content = editor.innerHTML;
+      }
+      const blob = new Blob([content], { type: 'text/plain' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = 'notepad.html';
+      a.download = `homerlex_note.${ext}`;
       a.click();
       URL.revokeObjectURL(a.href);
-    });
-
-    // Import Font: 외부 서체 파일을 불러와 에디터에 적용
-    document.getElementById('fontInput').addEventListener('change', function(event){
+    }
+    
+    // 파일 불러오기: HOM/TXT 파일 읽어서 에디터에 로드
+    function loadFile(event) {
       const file = event.target.files[0];
-      if(file) {
-        const fontName = "customFont" + Date.now();
-        const url = URL.createObjectURL(file);
-        const style = document.createElement('style');
-        style.innerHTML = `
-          @font-face {
-            font-family: '${fontName}';
-            src: url(${url});
-          }
-        `;
-        document.head.appendChild(style);
-        document.getElementById('editor').style.fontFamily = fontName;
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const ext = file.name.split('.').pop().toLowerCase();
+        // HOM 파일은 HTML 형식으로, TXT 파일은 텍스트로 처리
+        if (ext === 'hom') {
+          document.getElementById('editor').innerHTML = e.target.result;
+        } else if (ext === 'txt') {
+          document.getElementById('editor').innerText = e.target.result;
+        }
+      };
+      reader.readAsText(file);
+    }
+    
+    // 버튼 클릭 이벤트
+    document.getElementById('btnBold').addEventListener('click', () => document.execCommand('bold'));
+    document.getElementById('btnUnderline').addEventListener('click', () => document.execCommand('underline'));
+    document.getElementById('btnHighlight').addEventListener('click', applyHighlight);
+    document.getElementById('btnRemoveHighlight').addEventListener('click', removeHighlight);
+    document.getElementById('btnSave').addEventListener('click', saveContent);
+    document.getElementById('btnUndo').addEventListener('click', () => document.execCommand('undo'));
+    document.getElementById('btnRedo').addEventListener('click', () => document.execCommand('redo'));
+    document.getElementById('btnLoad').addEventListener('click', () => document.getElementById('fileLoad').click());
+    document.getElementById('fileLoad').addEventListener('change', loadFile);
+    
+    // 단축키 지원: Ctrl+B, Ctrl+U, Ctrl+H, Ctrl+R, Ctrl+S, Ctrl+O, Ctrl+Z, Ctrl+Y
+    document.addEventListener('keydown', function(event) {
+      if (event.ctrlKey) {
+        switch (event.key.toLowerCase()) {
+          case 'b': // Bold
+            event.preventDefault();
+            document.execCommand('bold');
+            break;
+          case 'u': // Underline
+            event.preventDefault();
+            document.execCommand('underline');
+            break;
+          case 'h': // Apply Highlight
+            event.preventDefault();
+            applyHighlight();
+            break;
+          case 'r': // Remove Highlight
+            event.preventDefault();
+            removeHighlight();
+            break;
+          case 's': // Save
+            event.preventDefault();
+            saveContent();
+            break;
+          case 'o': // Load file
+            event.preventDefault();
+            document.getElementById('fileLoad').click();
+            break;
+          case 'z': // Undo
+            event.preventDefault();
+            document.execCommand('undo');
+            break;
+          case 'y': // Redo
+            event.preventDefault();
+            document.execCommand('redo');
+            break;
+        }
       }
     });
   </script>
