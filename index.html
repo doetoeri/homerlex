@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Beauty Notepad Web App</title>
+  <!-- Pretendard 폰트 로드 (출처: Pretendard GitHub) :contentReference[oaicite:0]{index=0} -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard/dist/web/static/pretendard.css">
+  <style>
+    /* 뉴모피즘 디자인 및 Pretendard 폰트 적용 */
+    body {
+      font-family: 'Pretendard', sans-serif;
+      background: #e0e5ec;
+      margin: 0;
+      padding: 20px;
+    }
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .toolbar button,
+    .toolbar label {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      background: #e0e5ec;
+      box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold; /* 메뉴 텍스트 볼드 처리 */
+      outline: none;
+      transition: box-shadow 0.2s ease;
+    }
+    .toolbar button:active,
+    .toolbar label:active {
+      box-shadow: inset 5px 5px 10px #a3b1c6, inset -5px -5px 10px #ffffff;
+    }
+    .editor {
+      width: 100%;
+      height: 400px;
+      border: none;
+      border-radius: 20px;
+      padding: 20px;
+      background: #e0e5ec;
+      box-shadow: inset 5px 5px 10px #a3b1c6, inset -5px -5px 10px #ffffff;
+      overflow: auto;
+    }
+    /* 숨김 처리할 input 스타일 */
+    input[type="file"],
+    input[type="color"] {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <button id="btnBold">Bold</button>
+    <button id="btnColor">Text Color</button>
+    <button id="btnHighlight">Highlight</button>
+    <button id="btnSave">Save</button>
+    <label for="fontInput">Import Font</label>
+    <input type="file" id="fontInput" accept=".ttf,.otf">
+    <input type="color" id="colorPicker">
+    <input type="color" id="highlightPicker">
+  </div>
+  
+  <!-- contenteditable div를 사용하여 편집 가능한 영역 구현 -->
+  <div class="editor" contenteditable="true" id="editor">
+    여기에 메모를 입력하세요...
+  </div>
+  
+  <script>
+    // Bold 버튼: 선택된 텍스트에 굵게 적용 (execCommand 사용)
+    document.getElementById('btnBold').addEventListener('click', function(){
+      document.execCommand('bold');
+    });
+    
+    // Text Color 버튼: 색상 선택 input을 활성화 후 선택된 색상을 텍스트에 적용
+    document.getElementById('btnColor').addEventListener('click', function(){
+      document.getElementById('colorPicker').click();
+    });
+    document.getElementById('colorPicker').addEventListener('change', function(){
+      const color = this.value;
+      document.execCommand('foreColor', false, color);
+    });
+    
+    // Highlight 버튼: 배경색(하이라이트) 적용
+    document.getElementById('btnHighlight').addEventListener('click', function(){
+      document.getElementById('highlightPicker').click();
+    });
+    document.getElementById('highlightPicker').addEventListener('change', function(){
+      const color = this.value;
+      document.execCommand('backColor', false, color);
+    });
+    
+    // Save 버튼: 에디터의 내용을 HTML 파일로 저장
+    document.getElementById('btnSave').addEventListener('click', function(){
+      const content = document.getElementById('editor').innerHTML;
+      const blob = new Blob([content], { type: 'text/html' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'notepad.html';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+    
+    // Import Font: 외부 서체 파일을 불러와 에디터에 적용
+    document.getElementById('fontInput').addEventListener('change', function(event){
+      const file = event.target.files[0];
+      if(file) {
+        const fontName = "customFont" + Date.now();
+        const url = URL.createObjectURL(file);
+        const style = document.createElement('style');
+        style.innerHTML = `
+          @font-face {
+            font-family: '${fontName}';
+            src: url(${url});
+          }
+        `;
+        document.head.appendChild(style);
+        document.getElementById('editor').style.fontFamily = fontName;
+      }
+    });
+  </script>
+</body>
+</html>
