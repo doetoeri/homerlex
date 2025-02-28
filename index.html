@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Beauty Notepad Web App</title>
-  <!-- Pretendard 폰트 로드 (출처: Pretendard GitHub) :contentReference[oaicite:0]{index=0} -->
+  <!-- Pretendard 폰트 로드 -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard/dist/web/static/pretendard.css">
   <style>
-    /* 뉴모피즘 디자인 및 Pretendard 폰트 적용 */
+    /* 뉴모피즘 및 글래스모피즘 스타일 적용 */
     body {
       font-family: 'Pretendard', sans-serif;
-      background: #e0e5ec;
+      background: linear-gradient(135deg, #e0e5ec, #f0f0f3);
       margin: 0;
       padding: 20px;
     }
@@ -29,7 +29,7 @@
       box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff;
       cursor: pointer;
       font-size: 14px;
-      font-weight: bold; /* 메뉴 텍스트 볼드 처리 */
+      font-weight: bold; /* 메뉴 텍스트 볼드 */
       outline: none;
       transition: box-shadow 0.2s ease;
     }
@@ -43,9 +43,24 @@
       border: none;
       border-radius: 20px;
       padding: 20px;
-      background: #e0e5ec;
+      background: rgba(255, 255, 255, 0.1);
       box-shadow: inset 5px 5px 10px #a3b1c6, inset -5px -5px 10px #ffffff;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
       overflow: auto;
+      position: relative;
+    }
+    /* 글래스모피즘 하이라이트 효과 */
+    .highlight {
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      padding: 2px 4px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #000;
     }
     /* 숨김 처리할 input 스타일 */
     input[type="file"],
@@ -66,13 +81,13 @@
     <input type="color" id="highlightPicker">
   </div>
   
-  <!-- contenteditable div를 사용하여 편집 가능한 영역 구현 -->
+  <!-- contenteditable div를 사용하여 편집 가능한 영역 -->
   <div class="editor" contenteditable="true" id="editor">
     여기에 메모를 입력하세요...
   </div>
-  
+
   <script>
-    // Bold 버튼: 선택된 텍스트에 굵게 적용 (execCommand 사용)
+    // Bold 버튼: 선택된 텍스트를 굵게 처리
     document.getElementById('btnBold').addEventListener('click', function(){
       document.execCommand('bold');
     });
@@ -85,16 +100,20 @@
       const color = this.value;
       document.execCommand('foreColor', false, color);
     });
-    
-    // Highlight 버튼: 배경색(하이라이트) 적용
-    document.getElementById('btnHighlight').addEventListener('click', function(){
-      document.getElementById('highlightPicker').click();
+
+    // Highlight 버튼: 선택된 텍스트에 글래스모피즘 효과 적용
+    document.getElementById('btnHighlight').addEventListener('click', function() {
+      const selection = window.getSelection();
+      if (selection.isCollapsed) return; // 선택된 텍스트가 없으면 실행 안 함
+
+      const range = selection.getRangeAt(0);
+      const selectedText = range.extractContents();
+      const span = document.createElement('span');
+      span.className = 'highlight';
+      span.appendChild(selectedText);
+      range.insertNode(span);
     });
-    document.getElementById('highlightPicker').addEventListener('change', function(){
-      const color = this.value;
-      document.execCommand('backColor', false, color);
-    });
-    
+
     // Save 버튼: 에디터의 내용을 HTML 파일로 저장
     document.getElementById('btnSave').addEventListener('click', function(){
       const content = document.getElementById('editor').innerHTML;
@@ -105,7 +124,7 @@
       a.click();
       URL.revokeObjectURL(a.href);
     });
-    
+
     // Import Font: 외부 서체 파일을 불러와 에디터에 적용
     document.getElementById('fontInput').addEventListener('change', function(event){
       const file = event.target.files[0];
