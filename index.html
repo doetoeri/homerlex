@@ -7,19 +7,20 @@
   <!-- Pretendard 폰트 로드 (출처: Pretendard GitHub) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard/dist/web/static/pretendard.css">
   <style>
-    /* 기본 스타일 */
     body {
       font-family: 'Pretendard', sans-serif;
       background: linear-gradient(135deg, #e0e5ec, #f0f0f3);
       margin: 0;
       padding: 20px;
     }
+    /* 툴바 중앙 정렬 */
     .toolbar {
       display: flex;
       gap: 10px;
-      margin-bottom: 20px;
+      margin: 0 auto 20px auto;
       flex-wrap: wrap;
       align-items: center;
+      justify-content: center;
     }
     .toolbar button {
       padding: 10px 20px;
@@ -37,18 +38,16 @@
     .toolbar button:hover {
       box-shadow: inset 5px 5px 10px #a3b1c6, inset -5px -5px 10px #ffffff;
     }
-    /* 원형 컬러피커 */
+    /* 원형 컬러피커: 텍스트 컬러 설정용 */
     .toolbar input[type="color"] {
       width: 40px;
       height: 40px;
       border: none;
       border-radius: 50%;
       padding: 0;
-      margin-left: 10px;
       cursor: pointer;
       background: transparent;
     }
-    /* 저장 확장자 선택 */
     .toolbar select {
       padding: 8px;
       border: none;
@@ -74,18 +73,22 @@
       overflow: auto;
       position: relative;
     }
-    /* Bold 텍스트 강제 Pretendard Semibold */
     .editor b,
     .editor strong {
       font-weight: 600;
     }
-    /* Fluent Design 스타일의 하이라이트 (기본) */
+    /* 기본 Highlight 스타일 (초기 하이라이트 색상은 노란빛) */
     .highlight {
       border-radius: 8px;
       padding: 2px 4px;
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
       position: relative;
+      /* 아래 스타일은 updateHighlightStyle()에서 덮어씌워집니다. */
+      background-color: rgba(255, 255, 0, 0.3);
+      box-shadow: 0px 0px 12px rgba(255, 255, 0, 0.5);
+      border: 1px solid rgba(255, 255, 0, 0.4);
+      color: #000;
     }
   </style>
 </head>
@@ -95,19 +98,19 @@
     <button id="btnUnderline" title="Underline (Ctrl+U)">Underline</button>
     <button id="btnHighlight" title="Apply Highlight (Ctrl+H)">Highlight</button>
     <button id="btnRemoveHighlight" title="Remove Highlight (Ctrl+R)">Remove Highlight</button>
-    <!-- 원형 컬러피커: 하이라이트 색상 선택 -->
-    <input type="color" id="colorHighlight" title="Choose Highlight Color" value="#007AFF">
-    <!-- 저장 확장자 선택 -->
+    <!-- 텍스트 컬러 설정용 컬러피커 -->
+    <input type="color" id="textColor" title="Choose Text Color (Ctrl+T)" value="#007AFF">
+    <!-- 저장 확장자 선택: .hom, .txt, .docx -->
     <select id="saveType" title="Save as (Ctrl+S)">
-      <option value="txt">TXT</option>
-      <option value="hom" selected>HOM</option>
+      <option value="hom">.hom</option>
+      <option value="txt">.txt</option>
+      <option value="docx">.docx</option>
     </select>
     <button id="btnSave" title="Save (Ctrl+S)">Save</button>
     <button id="btnUndo" title="Undo (Ctrl+Z)">Undo</button>
     <button id="btnRedo" title="Redo (Ctrl+Y)">Redo</button>
     <button id="btnLoad" title="Load File (Ctrl+O)">Load</button>
-    <!-- 숨김 파일 입력: HOM/TXT 파일 불러오기 -->
-    <input type="file" id="fileLoad" accept=".hom,.txt" style="display: none;">
+    <input type="file" id="fileLoad" accept=".hom,.txt,.docx" style="display: none;">
   </div>
 
   <div class="editor" contenteditable="true" id="editor">
@@ -127,16 +130,17 @@
       return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     }
     
-    // 하이라이트 스타일 업데이트 (선택한 컬러에 따라)
+    // 하이라이트 스타일 업데이트: 텍스트 컬러 피커 값 적용 + Bold 적용
     function updateHighlightStyle(element) {
-      const color = document.getElementById('colorHighlight').value;
+      const color = document.getElementById('textColor').value;
       element.style.backgroundColor = hexToRgba(color, 0.2);
       element.style.boxShadow = `0px 0px 12px ${hexToRgba(color, 0.4)}`;
       element.style.border = `1px solid ${hexToRgba(color, 0.3)}`;
-      element.style.color = '#000';
+      element.style.color = color;
+      element.style.fontWeight = '600';
     }
     
-    // 하이라이트 적용: 이미 하이라이트된 경우 업데이트, 아니면 새로 래핑
+    // 하이라이트 적용: 이미 하이라이트된 경우는 선택 해제
     function applyHighlight() {
       const selection = window.getSelection();
       if (selection.isCollapsed) return;
@@ -146,8 +150,6 @@
         container = container.parentElement;
       }
       if (container && container.classList && container.classList.contains('highlight')) {
-        // 이미 하이라이트된 영역이면 색상 업데이트
-        updateHighlightStyle(container);
         selection.removeAllRanges();
         return;
       }
@@ -159,7 +161,7 @@
       selection.removeAllRanges();
     }
     
-    // 하이라이트 해제: 선택된 영역이 하이라이트인 경우 태그 제거
+    // 하이라이트 해제: highlight span을 풀어냄
     function removeHighlight() {
       const selection = window.getSelection();
       if (selection.isCollapsed) return;
@@ -178,15 +180,34 @@
       }
     }
     
-    // 저장 기능: 선택한 확장자에 따라 저장 (TXT: innerText, HOM: innerHTML)
+    // 텍스트 컬러 변경: 컬러피커 변경 시 선택된 텍스트에 적용 (execCommand)
+    document.getElementById('textColor').addEventListener('change', function() {
+      const color = this.value;
+      document.execCommand('foreColor', false, color);
+    });
+    
+    // 저장 기능: 선택한 확장자에 따라 저장 (.hom은 JSON, .txt는 순수 텍스트, .docx는 HTML 래퍼)
     function saveContent() {
       const editor = document.getElementById('editor');
       const ext = document.getElementById('saveType').value;
       let content = '';
-      if (ext === 'txt') {
+      if(ext === 'hom') {
+        const data = {
+          version: "1.0",
+          content: editor.innerHTML
+        };
+        content = JSON.stringify(data);
+      } else if(ext === 'txt') {
         content = editor.innerText;
-      } else if (ext === 'hom') {
-        content = editor.innerHTML;
+      } else if(ext === 'docx') {
+        content = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Homerlex Document</title>
+</head>
+<body>${editor.innerHTML}</body>
+</html>`;
       }
       const blob = new Blob([content], { type: 'text/plain' });
       const a = document.createElement('a');
@@ -196,24 +217,38 @@
       URL.revokeObjectURL(a.href);
     }
     
-    // 파일 불러오기: HOM/TXT 파일 읽어서 에디터에 로드
+    // 파일 불러오기: 확장자에 따라 에디터에 로드
     function loadFile(event) {
       const file = event.target.files[0];
       if (!file) return;
+      const ext = file.name.split('.').pop().toLowerCase();
       const reader = new FileReader();
       reader.onload = function(e) {
-        const ext = file.name.split('.').pop().toLowerCase();
-        // HOM 파일은 HTML 형식으로, TXT 파일은 텍스트로 처리
         if (ext === 'hom') {
-          document.getElementById('editor').innerHTML = e.target.result;
+          try {
+            const data = JSON.parse(e.target.result);
+            if (data.version && data.content) {
+              document.getElementById('editor').innerHTML = data.content;
+              return;
+            }
+          } catch (err) {
+            console.error("HOM 파일 파싱 에러:", err);
+          }
+          document.getElementById('editor').innerText = e.target.result;
         } else if (ext === 'txt') {
+          document.getElementById('editor').innerText = e.target.result;
+        } else if (ext === 'docx') {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(e.target.result, "text/html");
+          document.getElementById('editor').innerHTML = doc.body.innerHTML;
+        } else {
           document.getElementById('editor').innerText = e.target.result;
         }
       };
       reader.readAsText(file);
     }
     
-    // 버튼 클릭 이벤트
+    // 버튼 이벤트 리스너
     document.getElementById('btnBold').addEventListener('click', () => document.execCommand('bold'));
     document.getElementById('btnUnderline').addEventListener('click', () => document.execCommand('underline'));
     document.getElementById('btnHighlight').addEventListener('click', applyHighlight);
@@ -224,41 +259,45 @@
     document.getElementById('btnLoad').addEventListener('click', () => document.getElementById('fileLoad').click());
     document.getElementById('fileLoad').addEventListener('change', loadFile);
     
-    // 단축키 지원: Ctrl+B, Ctrl+U, Ctrl+H, Ctrl+R, Ctrl+S, Ctrl+O, Ctrl+Z, Ctrl+Y
+    // 단축키 지원: Ctrl+B, Ctrl+U, Ctrl+H, Ctrl+R, Ctrl+S, Ctrl+O, Ctrl+Z, Ctrl+Y, Ctrl+T (텍스트 컬러)
     document.addEventListener('keydown', function(event) {
       if (event.ctrlKey) {
         switch (event.key.toLowerCase()) {
-          case 'b': // Bold
+          case 'b':
             event.preventDefault();
             document.execCommand('bold');
             break;
-          case 'u': // Underline
+          case 'u':
             event.preventDefault();
             document.execCommand('underline');
             break;
-          case 'h': // Apply Highlight
+          case 'h':
             event.preventDefault();
             applyHighlight();
             break;
-          case 'r': // Remove Highlight
+          case 'r':
             event.preventDefault();
             removeHighlight();
             break;
-          case 's': // Save
+          case 's':
             event.preventDefault();
             saveContent();
             break;
-          case 'o': // Load file
+          case 'o':
             event.preventDefault();
             document.getElementById('fileLoad').click();
             break;
-          case 'z': // Undo
+          case 'z':
             event.preventDefault();
             document.execCommand('undo');
             break;
-          case 'y': // Redo
+          case 'y':
             event.preventDefault();
             document.execCommand('redo');
+            break;
+          case 't':
+            event.preventDefault();
+            document.getElementById('textColor').click();
             break;
         }
       }
