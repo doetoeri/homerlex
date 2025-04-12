@@ -41,7 +41,7 @@
       color: var(--copilot-primary);
     }
     
-    /* 탭바: 헤더 바로 아래 */
+    /* 탭바 (헤더 바로 아래) */
     #tabBar {
       display: flex;
       justify-content: center;
@@ -130,7 +130,6 @@
     .format-btn .material-icons {
       font-size: 24px;
     }
-    /* "텍스트 버튼 적용" 전용 버튼 */
     #convertBtn {
       background-color: var(--copilot-primary);
       color: var(--copilot-on-primary);
@@ -146,7 +145,7 @@
       background-color: var(--copilot-on-primary);
       color: var(--copilot-primary);
     }
-
+    
     /* 변환 후 생성된 텍스트 버튼 */
     .highlight-btn {
       display: inline-block;
@@ -167,8 +166,8 @@
     .highlight-btn:active {
       transform: scale(0.97);
     }
-
-    /* 설명 입력창: 텍스트 입력기 뒤에 항상 흰색 배경 적용 */
+    
+    /* 설명 입력창: input에 항상 흰색 배경 적용 */
     .explanation-box {
       background-color: var(--copilot-surface);
       box-shadow: var(--copilot-elevation);
@@ -189,7 +188,7 @@
       border: 1px solid #ccc;
       border-radius: 4px;
       box-sizing: border-box;
-      background-color: #ffffff;  /* 입력창 뒤에 흰색 배경 */
+      background-color: #ffffff;
     }
   </style>
 </head>
@@ -197,15 +196,15 @@
   <header>
     <div id="brand" class="brand-title">Homerlex</div>
   </header>
-
-  <!-- 탭바: 헤더 바로 아래 -->
+  
+  <!-- 탭바: 페이지 상단에 위치 -->
   <div id="tabBar">
     <button class="tab-btn active" data-tab="1">Document 1</button>
     <button class="tab-btn new-tab" id="newTabBtn">
       <span class="material-icons">add</span>
     </button>
   </div>
-
+  
   <!-- 메모장 영역 -->
   <div id="notepadContainer">
     <div id="notepad" contenteditable="true">
@@ -215,8 +214,8 @@
 각 줄마다 텍스트 버튼으로 변환됩니다.</p>
     </div>
   </div>
-
-  <!-- 하단 툴바: 포맷 버튼 및 "텍스트 버튼 적용" 버튼 -->
+  
+  <!-- 하단 툴바: 포맷 버튼 및 텍스트 버튼 적용 -->
   <div id="toolbar">
     <button id="convertBtn" class="md3-button">텍스트 버튼 적용</button>
     <button class="format-btn" onclick="execCmd('bold')">
@@ -241,16 +240,32 @@
       <span class="material-icons">format_align_right</span>
     </button>
   </div>
-
+  
   <script>
+    // 변수 선언: 현재 활성 탭 ID 저장
+    let activeTab = "1";
+    
+    // notepad의 내용 변경 시, localStorage에 저장
+    const notepad = document.getElementById('notepad');
+    notepad.addEventListener('input', function() {
+      localStorage.setItem("notepad-content-" + activeTab, notepad.innerHTML);
+    });
+
+    // 페이지 로드시 현재 활성 탭의 저장된 내용을 불러오기
+    window.addEventListener('DOMContentLoaded', function() {
+      const storedContent = localStorage.getItem("notepad-content-" + activeTab);
+      if (storedContent) {
+        notepad.innerHTML = storedContent;
+      }
+    });
+
     // 기본 포맷팅 명령 (볼드, 이탤릭 등)
     function execCmd(command) {
       document.execCommand(command, false, null);
     }
 
-    // 텍스트 버튼 적용: 선택한 텍스트를 각 줄마다 텍스트 버튼으로 변환
+    // "텍스트 버튼 적용" 버튼 클릭 시 선택한 텍스트를 각 줄마다 텍스트 버튼으로 변환
     document.getElementById('convertBtn').addEventListener('click', function () {
-      const notepad = document.getElementById('notepad');
       const selection = window.getSelection();
       if (selection.rangeCount > 0) {
         const range = selection.getRangeAt(0);
@@ -274,18 +289,26 @@
       }
     });
 
-    // 탭 기능: 탭 클릭 시 active 설정 및 메모장 포커스 전환
+    // 탭 기능: 탭 클릭 시 현재 탭의 내용 저장 후, active 전환 및 해당 탭 내용 로드
     const tabBar = document.getElementById('tabBar');
     tabBar.addEventListener('click', function(e) {
       const tab = e.target.closest('.tab-btn');
       if (tab && !tab.classList.contains('new-tab')) {
+        // 현재 active 탭 내용 저장
+        localStorage.setItem("notepad-content-" + activeTab, notepad.innerHTML);
+        // active 클래스 업데이트
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         tab.classList.add('active');
-        document.getElementById('notepad').focus();
+        // 새 active 탭 설정
+        activeTab = tab.dataset.tab || "1";
+        // 해당 탭 내용 로드 (저장된 내용이 있으면, 없으면 기본 텍스트 유지)
+        const content = localStorage.getItem("notepad-content-" + activeTab);
+        notepad.innerHTML = content !== null ? content : "";
+        notepad.focus();
       }
     });
 
-    // 새 탭 추가
+    // 새 탭 추가: 새로운 탭 버튼 생성 및 초기화
     document.getElementById('newTabBtn').addEventListener('click', function() {
       const newCount = document.querySelectorAll('.tab-btn').length;
       const newTab = document.createElement('button');
@@ -293,9 +316,11 @@
       newTab.textContent = `Document ${newCount}`;
       newTab.dataset.tab = newCount;
       tabBar.insertBefore(newTab, this);
+      // 기본 내용은 빈 내용 (또는 기본 텍스트)
+      localStorage.setItem("notepad-content-" + newCount, "");
     });
 
-    // 탭 이름 변경: 더블클릭 시 프롬프트
+    // 탭 이름 변경: 더블클릭 시 프롬프트로 이름 변경
     tabBar.addEventListener('dblclick', function(e) {
       const btn = e.target.closest('.tab-btn');
       if (btn && !btn.classList.contains('new-tab')) {
@@ -318,7 +343,7 @@
         explanationBox = document.createElement("div");
         explanationBox.className = "explanation-box";
         explanationBox.id = id;
-        // 단일 줄 입력 필드 생성 (저장 버튼은 제거→엔터키로 저장)
+        // 단일 줄 input 필드 생성 (엔터키로 저장)
         const inputField = document.createElement("input");
         inputField.type = "text";
         inputField.placeholder = "여기에 설명을 입력하세요...";
