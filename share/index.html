@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <!-- 모바일 최적화 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Homerlex-Next innovation of Notepads.</title>
+  <!-- 파비콘 -->
+  <link rel="icon" type="image/png" href="icon.png">
+  <!-- Pretendard 글꼴 CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <!-- PeerJS (WebRTC 신호 처리용) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.3.2/peerjs.min.js"></script>
+  <style>
+    :root {
+      --copilot-primary: #0078D4;
+      --copilot-on-primary: #ffffff;
+      --copilot-surface: #ffffff;
+      --copilot-on-surface: #323130;
+      --copilot-background: #E3F2FD;
+      --copilot-corner-radius: 32px;
+      --copilot-font-family: 'Pretendard', sans-serif;
+      --copilot-font-size: 16px;
+      --md3-button-padding: 0.5rem 1rem;
+    }
+    /* 전체 레이아웃 */
+    body {
+      background-color: var(--copilot-background);
+      font-family: var(--copilot-font-family);
+      margin: 20px;
+      color: var(--copilot-on-surface);
+      text-align: center;
+    }
+    header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    /* 로고 이미지: 최대 너비 100px */
+    .logo {
+      max-width: 100px;
+      width: 100%;
+      height: auto;
+    }
+    /* 태그라인: 로고 아래 "Homerlex"만 간단하게 표시 */
+    .tagline {
+      font-size: 18px;
+      color: var(--copilot-primary);
+      margin-top: 5px;
+    }
+    /* 공유 영역 */
+    #sharedContainer {
+      width: 80%;
+      max-width: 800px;
+      margin: 0 auto 20px;
+      background-color: var(--copilot-surface);
+      border-radius: var(--copilot-corner-radius);
+      padding: 15px;
+      text-align: left;
+    }
+    /* contenteditable 영역: 불필요한 상하 공백 제거 */
+    #sharedContent {
+      width: 100%;
+      min-height: 300px;
+      outline: none;
+      padding: 10px;
+    }
+    #sharedContent p {
+      margin-top: 0;
+      margin-bottom: 0;
+      line-height: 1.5;
+    }
+    /* 텍스트 버튼 적용 및 동기화 버튼 */
+    #convertBtn, #syncButton, #bluetoothButton {
+      background-color: var(--copilot-primary);
+      color: var(--copilot-on-primary);
+      border: none;
+      padding: var(--md3-button-padding);
+      border-radius: var(--copilot-corner-radius);
+      font-size: var(--copilot-font-size);
+      cursor: pointer;
+      margin-top: 10px;
+      display: inline-block;
+    }
+    #convertBtn:hover, #syncButton:hover, #bluetoothButton:hover {
+      background-color: var(--copilot-on-primary);
+      color: var(--copilot-primary);
+    }
+    /* 변환 후 생성되는 텍스트 버튼 */
+    .highlight-btn {
+      display: inline-block;
+      white-space: pre-wrap;
+      background-color: var(--copilot-primary);
+      border: none;
+      padding: var(--md3-button-padding);
+      border-radius: var(--copilot-corner-radius);
+      color: var(--copilot-on-primary);
+      cursor: pointer;
+      margin: 2px 0;
+      transition: transform 0.1s ease;
+    }
+    .highlight-btn:active {
+      transform: scale(0.97);
+    }
+    /* 설명 입력창 (텍스트 버튼 클릭 시) */
+    .explanation-box {
+      background-color: var(--copilot-surface);
+      border-radius: var(--copilot-corner-radius);
+      padding: 15px;
+      margin-top: 5px;
+      animation: fadeIn 0.3s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .explanation-box input {
+      width: 100%;
+      font-family: inherit;
+      font-size: var(--copilot-font-size);
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      background-color: #ffffff;
+    }
+    /* 모바일 전용 스타일 */
+    @media screen and (max-width: 600px) {
+      body { margin: 10px; }
+      #sharedContainer { width: 100%; }
+      .logo { max-width: 80px; }
+      .tagline { font-size: 16px; }
+      #convertBtn, #syncButton, #bluetoothButton { width: 90%; margin-bottom: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- 헤더 영역 -->
+  <header>
+    <img src="logo.png" alt="Homerlex Logo" class="logo">
+    <div class="tagline">Homerlex</div>
+  </header>
+  
+  <!-- 공유 영역 (공유 / 텍스트 버튼 기능 중심) -->
+  <div id="sharedContainer">
+    <div id="sharedContent" contenteditable="true">
+      <p>여기에 공유할 내용을 작성하세요.
+원하는 구간의 텍스트를 선택한 후 "텍스트 버튼 적용" 버튼을 누르면 해당 줄들이 버튼으로 변환됩니다.</p>
+    </div>
+    <div style="text-align:center;">
+      <button id="convertBtn">텍스트 버튼 적용</button>
+      <button id="syncButton">동기화 전송</button>
+      <button id="bluetoothButton">블루투스 연결</button>
+    </div>
+  </div>
+  
+  <script>
+    /***********************
+     * 1. 고유 시드 및 그룹 설정
+     ***********************/
+    function generateUUID() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        let r = crypto.getRandomValues(new Uint8Array(1))[0] % 16;
+        let v = (c === 'x') ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    }
+    // 그룹 ID: 로컬에 저장된 값이 없으면 사용자 입력 (예: "room1")
+    let groupID = localStorage.getItem('groupID');
+    if (!groupID) {
+      groupID = prompt("동기화할 그룹 ID를 입력하세요 (예: room1):", "room1") || "room1";
+      localStorage.setItem('groupID', groupID);
+    }
+    // 고유 시드: 그룹ID와 UUID 결합
+    let deviceSeed = localStorage.getItem('deviceSeed');
+    if (!deviceSeed) {
+      deviceSeed = groupID + "-" + generateUUID();
+      localStorage.setItem('deviceSeed', deviceSeed);
+    }
+    console.log("Device Seed:", deviceSeed, "Group:", groupID);
+    
+    /***********************
+     * 2. PeerJS를 이용한 오프라인 공유 동기화
+     ***********************/
+    // 사용자가 이 기기를 호스트(데이터 중계자)로 사용할지 선택합니다.
+    var isHost = confirm("이 기기를 호스트로 사용하시겠습니까?\n(다른 기기는 호스트에 연결되어 동기화됩니다.)");
+    var hostId = groupID + "-host";  // 그룹별 고정 호스트 ID
+    // 클라이언트의 PeerID: 그룹ID와 deviceSeed의 마지막 부분 결합
+    var peerId = isHost ? hostId : groupID + "-" + deviceSeed.split("-").pop();
+    
+    // Peer 객체 생성 (기본 PeerJS 서버 사용)
+    var myPeer = new Peer(peerId);
+    
+    // 호스트일 경우: 다른 기기의 연결을 기다리고, 클라이언트로부터 데이터 수신시 브로드캐스트합니다.
+    var connections = [];
+    var hostConn = null;
+    
+    myPeer.on('open', function(id) {
+      console.log("PeerJS 연결됨. 내 ID:", id);
