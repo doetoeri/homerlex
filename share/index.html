@@ -143,7 +143,8 @@
     <img src="logo.png" alt="Homerlex Logo" class="logo">
     <div class="tagline">Homerlex</div>
   </header>
-  <!-- 공유 영역: 사용자 내용 입력 및 기능 버튼 -->
+  
+  <!-- 공유 영역 (공유 / 텍스트 버튼 기능 중심) -->
   <div id="sharedContainer">
     <div id="sharedContent" contenteditable="true">
       <p>여기에 공유할 내용을 작성하세요.
@@ -187,10 +188,10 @@
     // 사용자가 이 기기를 호스트(데이터 중계자)로 사용할지 선택
     var isHost = confirm("이 기기를 호스트로 사용하시겠습니까?\n(다른 기기는 호스트에 연결되어 동기화됩니다.)");
     var hostId = groupID + "-host";  // 그룹별 고정 호스트 ID
-    // 클라이언트의 PeerID: 그룹ID + deviceSeed의 마지막 부분 결합
+    // 클라이언트의 PeerID: 그룹ID와 deviceSeed의 마지막 부분 결합
     var peerId = isHost ? hostId : groupID + "-" + deviceSeed.split("-").pop();
     
-    // Peer 객체 생성 (PeerJS 기본 서버 사용)
+    // Peer 객체 생성 (기본 PeerJS 서버 사용)
     var myPeer = new Peer(peerId);
     
     // 호스트일 경우: 다른 기기의 연결을 기다리고, 데이터 수신 시 브로드캐스트
@@ -220,7 +221,7 @@
       }
     });
     
-    // 호스트가 받은 데이터를 별도의 연결에 브로드캐스트
+    // 호스트가 받은 데이터를 각 연결에 브로드캐스트
     function broadcastData(data, sender) {
       connections.forEach(function(conn) {
         if (conn !== sender) {
@@ -234,7 +235,7 @@
       document.getElementById("sharedContent").innerHTML = data.content;
     }
     
-    // 동기화 버튼: 공유 영역의 내용을 제출
+    // 동기화 버튼: 공유 영역의 내용을 전송
     document.getElementById("syncButton").addEventListener("click", function() {
       var content = document.getElementById("sharedContent").innerHTML;
       var data = { content: content };
@@ -253,7 +254,7 @@
     
     /***********************
      * 3. 텍스트 버튼 기능
-     *    공유 영역에서 선택한 텍스트를 줄 단위로 분리해 버튼으로 변환
+     * 선택한 텍스트를 줄 단위로 분리해 버튼으로 변환
      ***********************/
     document.getElementById('convertBtn').addEventListener('click', function () {
       const selection = window.getSelection();
@@ -282,7 +283,7 @@
     
     /***********************
      * 4. 설명 입력창 토글
-     *    각 텍스트 버튼 클릭 시 아래에 설명 입력창이 토글됩니다.
+     * 각 텍스트 버튼 클릭 시 설명 입력창을 토글하여 표시
      ***********************/
     function toggleExplanation(event) {
       event.stopPropagation();
@@ -315,17 +316,21 @@
     }
     
     /***********************
-     * 5. Web Bluetooth API 예제
-     *    (예시로 배터리 서비스에서 배터리 수준 읽기)
+     * 5. Web Bluetooth API (개선된 코드)
+     * 모든 BLE 장치를 검색하고, 선택된 장치의 배터리 레벨(예시)을 읽어옵니다.
      ***********************/
     document.getElementById('bluetoothButton').addEventListener('click', async () => {
       try {
+        // 모든 BLE 장치를 검색하도록 설정 (acceptAllDevices: true)
         const device = await navigator.bluetooth.requestDevice({
-          filters: [{ services: ['battery_service'] }]
+          acceptAllDevices: true,
+          optionalServices: ['battery_service']
         });
         console.log('선택된 장치:', device);
+        // GATT 서버에 연결
         const server = await device.gatt.connect();
         console.log('GATT 서버 연결 성공');
+        // 배터리 서비스 읽기 (테스트용 예시)
         const service = await server.getPrimaryService('battery_service');
         const characteristic = await service.getCharacteristic('battery_level');
         const value = await characteristic.readValue();
