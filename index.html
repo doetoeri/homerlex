@@ -4,382 +4,109 @@
   <meta charset="UTF-8">
   <!-- 모바일 최적화를 위한 meta 태그 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Homerlex-Next innovation of Notepads.</title>
-  <!-- 파비콘 -->
-  <link rel="icon" type="image/png" href="icon.png">
-  <!-- Pretendard 글꼴 (CDN) -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-  <!-- Material Icons -->
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <title>텍스트 버튼 기능 예제</title>
   <style>
-    :root {
-      --copilot-primary: #0078D4;  /* 단색 파란색 */
-      --copilot-on-primary: #ffffff;
-      --copilot-surface: #ffffff;
-      --copilot-on-surface: #323130;
-      --copilot-background: #E3F2FD; /* 파스텔톤 배경 */
-      /* 그림자는 모두 제거합니다. */
-      --copilot-corner-radius: 32px;
-      --copilot-font-family: 'Pretendard', sans-serif;
-      --copilot-font-size: 16px;
-      --toolbar-gap: 12px;
-      --tab-margin: 8px;
-      --md3-button-padding: 0.5rem 1rem;
-    }
-    
-    /* 기본 레이아웃 */
+    /* Pretendard 또는 원하는 글꼴을 사용해주세요.
+       여기서는 웹 안전 글꼴로 예시합니다. */
     body {
-      background-color: var(--copilot-background);
-      font-family: var(--copilot-font-family);
+      font-family: 'Pretendard', sans-serif;
+      background-color: #f0f0f0;
       margin: 20px;
-      color: var(--copilot-on-surface);
+      color: #333;
     }
     
-    header {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    /* 로고 이미지: 크기를 줄임 (최대 너비 100px) */
-    .logo {
-      max-width: 100px;
-      width: 100%;
-      height: auto;
-    }
-    /* 태그라인: 로고 아래에 간단히 "Homerlex"만 표시 */
-    .tagline {
-      font-size: 18px;
-      color: var(--copilot-primary);
-      margin-top: 5px;
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
     }
     
-    /* 탭바: 헤더 바로 아래 */
-    #tabBar {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: var(--tab-margin);
-      margin-bottom: 10px;
-    }
-    .tab-btn {
-      background-color: var(--copilot-surface);
-      border: none;
-      outline: none;
-      padding: 8px 16px;
-      border-radius: var(--copilot-corner-radius);
-      cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .tab-btn:hover {
-      background-color: #e1e1e1;
-    }
-    .tab-btn.active {
-      background-color: var(--copilot-primary);
-      color: var(--copilot-on-primary);
-      font-weight: bold;
-      transform: scale(1.05);
-    }
-    .tab-btn.new-tab {
-      font-size: 20px;
-      font-weight: bold;
-      background: none;
-      border: none;
-      padding: 8px;
-    }
-    
-    /* 메모장 컨테이너: 그림자 효과 제거 */
-    #notepadContainer {
-      position: relative;
-      width: 80%;
-      max-width: 800px;
-      margin: 0 auto 20px auto;
-      border-radius: var(--copilot-corner-radius);
-      background-color: var(--copilot-surface);
-    }
-    .notepad {
-      padding: 20px;
-      min-height: 400px;
-      word-wrap: break-word;
-      white-space: normal;
-    }
-    .notepad p {
-      line-height: 1.5;
-    }
-    
-    /* 하단 툴바: 포맷 버튼 및 "텍스트 버튼 적용" 버튼 */
-    #toolbar {
-      display: flex;
-      justify-content: center;
-      gap: var(--toolbar-gap);
-      flex-wrap: wrap;
-      transition: all 0.3s ease;
-      margin-top: 10px;
-    }
-    .format-btn {
-      background-color: var(--copilot-surface);
-      color: var(--copilot-on-surface);
-      border: none;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: var(--copilot-corner-radius);
-      cursor: pointer;
-      transition: background-color 0.2s ease, transform 0.1s ease;
-    }
-    .format-btn:hover {
-      background-color: #e1e1e1;
-    }
-    .format-btn:active {
-      transform: scale(0.98);
-    }
-    .format-btn .material-icons {
-      font-size: 24px;
-    }
-    /* "텍스트 버튼 적용" 전용 버튼 (그림자 제거) */
-    #convertBtn {
-      background-color: var(--copilot-primary);
-      color: var(--copilot-on-primary);
-      border: none;
-      padding: var(--md3-button-padding);
-      border-radius: var(--copilot-corner-radius);
-      font-size: var(--copilot-font-size);
-      cursor: pointer;
-      transition: background-color 0.2s ease, transform 0.1s ease;
-    }
-    #convertBtn:hover {
-      background-color: var(--copilot-on-primary);
-      color: var(--copilot-primary);
-    }
-    
-    /* 변환 후 생성된 텍스트 버튼 (그림자 제거) */
-    .highlight-btn {
-      display: inline-block;
-      white-space: pre-wrap;  /* 줄바꿈 보존 */
-      background-color: var(--copilot-primary);
-      border: none;
-      padding: var(--md3-button-padding);
-      border-radius: var(--copilot-corner-radius);
-      color: var(--copilot-on-primary);
-      cursor: pointer;
-      transition: transform 0.1s ease;
-      margin: 2px 0;
-    }
-    .highlight-btn:hover {
-      /* 그림자 제거: box-shadow 없음 */
-    }
-    .highlight-btn:active {
-      transform: scale(0.97);
-    }
-    
-    /* 설명 입력창: 박스 그림자 제거, input은 흰색 배경 */
-    .explanation-box {
-      background-color: var(--copilot-surface);
-      border-radius: var(--copilot-corner-radius);
-      padding: 15px;
-      animation: fadeIn 0.3s ease-out;
-      margin-top: 5px;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .explanation-box input {
-      width: 100%;
-      font-family: inherit;
-      font-size: var(--copilot-font-size);
-      padding: 8px;
+    /* 편집 영역 (내용 입력창) – 불필요한 상하 공백 제거 */
+    .editor {
       border: 1px solid #ccc;
-      border-radius: 4px;
-      box-sizing: border-box;
-      background-color: #ffffff;
+      background-color: #fff;
+      /* 상하 패딩을 0으로 지정하여 맨 위/아래에 추가 공백을 제거 */
+      padding-top: 0;
+      padding-bottom: 0;
+      padding-left: 10px;
+      padding-right: 10px;
+      min-height: 200px;
+      /* inner <p> 태그들의 기본 margin도 제거 */
+    }
+    .editor p {
+      margin: 0;
+      /* 단, 각 줄 사이에 한 줄 간격(예: line-height를 1.2~1.4 정도)으로 하고 싶다면 */
+      line-height: 1.4;
     }
     
-    /* 모바일 전용 스타일 */
-    @media screen and (max-width: 600px) {
-      body { margin: 10px; }
-      #notepadContainer { width: 100%; }
-      #toolbar { flex-direction: column; align-items: center; }
-      .tab-btn, .format-btn, #convertBtn { width: 90%; margin-bottom: 8px; }
-      .logo { max-width: 80px; }
-      .brand-title { font-size: 24px; }
-      .tagline { font-size: 16px; }
+    /* 변환 후 생성될 텍스트 버튼 스타일 */
+    .text-button {
+      background-color: #0078D4;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      margin: 2px 0; /* 각 버튼은 위아래로 약간의 간격만 존재 */
+    }
+    
+    /* 선택된 텍스트를 변환하는 버튼 스타일 */
+    .convert-btn {
+      display: block;
+      margin: 20px auto;
+      padding: 8px 16px;
+      background-color: #0078D4;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
     }
   </style>
 </head>
 <body>
-  <!-- 헤더 영역: 로고 이미지와 태그라인 -->
-  <header>
-    <img src="logo.png" alt="Homerlex Logo" class="logo">
-    <div class="tagline">Homerlex</div>
-  </header>
-  
-  <!-- 탭바: 페이지 상단에 위치 (문서 탭) -->
-  <div id="tabBar">
-    <button class="tab-btn active" data-tab="1">Document 1</button>
-    <button class="tab-btn new-tab" id="newTabBtn">
-      <span class="material-icons">add</span>
-    </button>
+  <h1>텍스트 버튼 기능 예제</h1>
+  <!-- 내용 편집 영역 -->
+  <div class="editor" contenteditable="true">
+    <p>여기에 텍스트를 입력하세요.</p>
   </div>
   
-  <!-- 메모장 영역 -->
-  <div id="notepadContainer">
-    <div id="notepad" contenteditable="true">
-      <p>
-        여기에 메모를 작성하세요.<br>
-        줄바꿈이 그대로 보존됩니다.<br>
-        원하는 텍스트 블록을 선택한 후 "텍스트 버튼 적용"을 누르면,<br>
-        각 줄마다 텍스트 버튼으로 변환됩니다.
-      </p>
-    </div>
-  </div>
-  
-  <!-- 하단 툴바: 포맷 버튼 및 "텍스트 버튼 적용" 버튼 -->
-  <div id="toolbar">
-    <button id="convertBtn" class="md3-button">텍스트 버튼 적용</button>
-    <button class="format-btn" onclick="execCmd('bold')">
-      <span class="material-icons">format_bold</span>
-    </button>
-    <button class="format-btn" onclick="execCmd('italic')">
-      <span class="material-icons">format_italic</span>
-    </button>
-    <button class="format-btn" onclick="execCmd('underline')">
-      <span class="material-icons">format_underlined</span>
-    </button>
-    <button class="format-btn" onclick="execCmd('strikeThrough')">
-      <span class="material-icons">strikethrough_s</span>
-    </button>
-    <button class="format-btn" onclick="execCmd('justifyLeft')">
-      <span class="material-icons">format_align_left</span>
-    </button>
-    <button class="format-btn" onclick="execCmd('justifyCenter')">
-      <span class="material-icons">format_align_center</span>
-    </button>
-    <button class="format-btn" onclick="execCmd('justifyRight')">
-      <span class="material-icons">format_align_right</span>
-    </button>
-  </div>
+  <!-- 변환 버튼: 선택한 텍스트를 각 줄마다 버튼 요소로 변환 -->
+  <button class="convert-btn" id="convertBtn">텍스트 버튼 변환</button>
   
   <script>
-    // 현재 활성 탭 ID 추적 (초기값 "1")
-    let activeTab = "1";
-    const notepad = document.getElementById('notepad');
-    
-    // 메모 내용이 변경되면 localStorage에 저장
-    notepad.addEventListener('input', function() {
-      localStorage.setItem("notepad-content-" + activeTab, notepad.innerHTML);
+    // "텍스트 버튼 변환" 버튼 클릭 이벤트 핸들러
+    document.getElementById('convertBtn').addEventListener('click', function() {
+      var selection = window.getSelection();
+      if (selection.rangeCount === 0) return;
+      
+      var range = selection.getRangeAt(0);
+      var selectedText = range.toString();
+      
+      if (selectedText.trim() === "") return;
+
+      // 선택한 텍스트를 줄바꿈(\n)을 기준으로 분리
+      var lines = selectedText.split(/\n/);
+      var fragment = document.createDocumentFragment();
+
+      lines.forEach(function(line) {
+        // 빈 줄은 무시합니다.
+        if (line.trim() === "") return;
+        
+        var btn = document.createElement('button');
+        btn.className = 'text-button';
+        btn.textContent = line;
+        fragment.appendChild(btn);
+        // 각 버튼 뒤에 줄바꿈을 위한 <br> 추가 (원하는 경우)
+        fragment.appendChild(document.createElement('br'));
+      });
+      
+      // 선택된 영역의 기존 내용을 삭제하고 새로 생성된 fragment를 삽입
+      range.deleteContents();
+      range.insertNode(fragment);
+      // 선택 영역 초기화
+      selection.removeAllRanges();
     });
-    
-    // 페이지 로드시 현재 활성 탭의 저장된 내용 불러오기
-    window.addEventListener('DOMContentLoaded', function() {
-      const storedContent = localStorage.getItem("notepad-content-" + activeTab);
-      if (storedContent !== null) {
-        notepad.innerHTML = storedContent;
-      }
-    });
-    
-    // 포맷팅 명령 실행 (볼드, 이탤릭 등)
-    function execCmd(command) {
-      document.execCommand(command, false, null);
-    }
-    
-    // "텍스트 버튼 적용" 버튼: 선택한 텍스트를 각 줄마다 텍스트 버튼으로 변환
-    document.getElementById('convertBtn').addEventListener('click', function () {
-      const selection = window.getSelection();
-      if (selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        const selectedText = range.toString();
-        if (!selectedText.trim()) return;
-        const fragment = document.createDocumentFragment();
-        selectedText.split(/\n/).forEach(line => {
-          if (!line.trim()) return;
-          const btn = document.createElement('button');
-          btn.className = 'highlight-btn md3-button';
-          btn.textContent = line;
-          // 고유 ID 생성
-          btn.dataset.explanationId = Math.random().toString(36).substr(2, 9);
-          fragment.appendChild(btn);
-          fragment.appendChild(document.createElement('br'));
-          btn.addEventListener('click', toggleExplanation);
-        });
-        range.deleteContents();
-        range.insertNode(fragment);
-        selection.removeAllRanges();
-      }
-    });
-    
-    // 탭 기능: 탭 클릭 시 현재 탭 내용 저장 후 활성 탭 전환 및 해당 탭 내용 불러오기
-    const tabBar = document.getElementById('tabBar');
-    tabBar.addEventListener('click', function(e) {
-      const tab = e.target.closest('.tab-btn');
-      if (tab && !tab.classList.contains('new-tab')) {
-        localStorage.setItem("notepad-content-" + activeTab, notepad.innerHTML);
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        tab.classList.add('active');
-        activeTab = tab.dataset.tab || "1";
-        const content = localStorage.getItem("notepad-content-" + activeTab);
-        notepad.innerHTML = (content !== null) ? content : "";
-        notepad.focus();
-      }
-    });
-    
-    // 새 탭 추가
-    document.getElementById('newTabBtn').addEventListener('click', function() {
-      const newCount = document.querySelectorAll('.tab-btn').length;
-      const newTab = document.createElement('button');
-      newTab.className = 'tab-btn';
-      newTab.textContent = `Document ${newCount}`;
-      newTab.dataset.tab = newCount;
-      tabBar.insertBefore(newTab, this);
-      localStorage.setItem("notepad-content-" + newCount, "");
-    });
-    
-    // 탭 이름 변경: 더블클릭 시 프롬프트
-    tabBar.addEventListener('dblclick', function(e) {
-      const btn = e.target.closest('.tab-btn');
-      if (btn && !btn.classList.contains('new-tab')) {
-        const newName = prompt("새 탭 이름을 입력하세요", btn.textContent);
-        if (newName && newName.trim() !== "") {
-          btn.textContent = newName.trim();
-        }
-      }
-    });
-    
-    // 텍스트 버튼(변환된 버튼)의 설명 입력창 토글
-    function toggleExplanation(event) {
-      event.stopPropagation();
-      const btn = event.target.closest("button");
-      const id = btn.dataset.explanationId;
-      let explanationBox = document.getElementById(id);
-      if (explanationBox) {
-        explanationBox.style.display = (explanationBox.style.display === "none") ? "block" : "none";
-      } else {
-        explanationBox = document.createElement("div");
-        explanationBox.className = "explanation-box";
-        explanationBox.id = id;
-        const inputField = document.createElement("input");
-        inputField.type = "text";
-        inputField.placeholder = "여기에 설명을 입력하세요...";
-        inputField.addEventListener("keydown", function(e) {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            const text = inputField.value;
-            if (!text.trim()){
-              alert("설명을 입력해주세요.");
-              return;
-            }
-            explanationBox.innerHTML = "<p>" + text + "</p>";
-          }
-        });
-        explanationBox.appendChild(inputField);
-        btn.parentNode.insertBefore(explanationBox, btn.nextSibling);
-      }
-    }
   </script>
 </body>
 </html>
