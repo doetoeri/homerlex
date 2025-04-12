@@ -11,6 +11,8 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
   <!-- Material Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <!-- LZ-String 라이브러리 (문자열 압축/해제) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
   <style>
     :root {
       --copilot-primary: #0078D4;
@@ -71,7 +73,7 @@
       margin-bottom: 0;
       line-height: 1.5;
     }
-    /* 버튼 스타일들 */
+    /* 공통 버튼 스타일 */
     button {
       background-color: var(--copilot-primary);
       color: var(--copilot-on-primary);
@@ -159,8 +161,8 @@
   
   <script>
     /***********************
-     * 텍스트 버튼 기능
-     * 공유 영역에서 선택한 텍스트를 줄 단위로 분리해 버튼으로 변환
+     * 1. 텍스트 버튼 기능
+     *    공유 영역에서 선택한 텍스트를 줄 단위로 분리해 버튼으로 변환
      ***********************/
     document.getElementById('convertBtn').addEventListener('click', function () {
       const selection = window.getSelection();
@@ -218,35 +220,26 @@
     }
     
     /***********************
-     * 오프라인 공유: 문자 코드 기반 동기화 기능
-     * "공유 코드 생성" 버튼을 누르면 공유 영역의 내용을 Base64로 인코딩하여 코드로 보여주며,
-     * "공유 코드 적용" 버튼을 누르면 사용자가 입력한 코드를 디코딩하여 공유 영역을 업데이트합니다.
+     * 2. 오프라인 공유: 문자 코드 기반 동기화
+     *    "공유 코드 생성" 버튼을 누르면, 공유 영역의 내용을 LZ‑String을 사용해 압축한 후 코드를 생성합니다.
+     *    "공유 코드 적용" 버튼을 누르면, 사용자가 입력한 코드를 해제하여 콘텐츠를 업데이트합니다.
      ***********************/
-    
-    // Base64 인코딩/디코딩 함수
-    function base64Encode(str) {
-      return btoa(unescape(encodeURIComponent(str)));
-    }
-    function base64Decode(str) {
-      return decodeURIComponent(escape(atob(str)));
-    }
-    
-    // 공유 코드 생성: 콘텐츠를 인코딩하여 사용자에게 복사할 코드를 제공합니다.
     document.getElementById("generateCodeBtn").addEventListener("click", function(){
          var content = document.getElementById("sharedContent").innerHTML;
-         var encoded = base64Encode(content);
-         prompt("아래의 코드를 복사하여 다른 기기에 붙여넣으세요:", encoded);
+         // LZ‑String을 이용해 압축 후 URL-safe 문자열 생성
+         var compressed = LZString.compressToEncodedURIComponent(content);
+         prompt("아래의 코드를 복사하여 다른 기기에 붙여넣으세요:", compressed);
     });
     
-    // 공유 코드 적용: 사용자가 붙여넣은 코드를 디코딩하여 콘텐츠를 업데이트합니다.
     document.getElementById("applyCodeBtn").addEventListener("click", function(){
          var code = prompt("다른 기기에서 복사한 코드를 붙여넣으세요:");
          if(code) {
               try { 
-                var decoded = base64Decode(code);
-                document.getElementById("sharedContent").innerHTML = decoded;
+                var decompressed = LZString.decompressFromEncodedURIComponent(code);
+                if(decompressed === null) throw "압축 해제 실패";
+                document.getElementById("sharedContent").innerHTML = decompressed;
               } catch(e){
-                alert("유효한 코드가 아닙니다.");
+                alert("유효한 코드가 아닙니다." + e);
               }
          }
     });
