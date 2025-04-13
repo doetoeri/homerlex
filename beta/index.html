@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <!-- 모바일 최적화 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Homerlex – Word Editor (채널 동기화)</title>
+  <link rel="icon" type="image/png" href="icon.png">
+  
+  <!-- Google Fonts: Noto Sans (본문), Instrument Serif (태그라인) -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&family=Instrument+Serif&display=swap" rel="stylesheet">
+  
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  
+  <!-- PeerJS는 여기선 사용하지 않고 대신 BroadcastChannel을 사용합니다 -->
+  
+  <style>
+    :root {
+      --primary: #2196F3;           /* 기본 배경색 (버튼 등) */
+      --on-primary: #000000;          /* 모든 텍스트 및 아이콘: 검정 */
+      --surface: #ffffff;
+      --on-surface: #323130;
+      --background: #F1F3F4;
+      --corner-radius: 20px;
+      --font-family: 'Noto Sans', sans-serif;
+      --serif-font: 'Instrument Serif', serif;
+      --font-size: 16px;
+      --button-padding: 0.5rem 0.75rem;
+      --toolbar-height: 56px;
+    }
+    /* 만약 하위 도메인 간 공유를 원한다면, 아래 문을 적절한 도메인으로 설정 */
+    /* document.domain = "example.com"; */
+    
+    body {
+      background-color: var(--background);
+      font-family: var(--font-family);
+      margin: 20px;
+      color: var(--on-surface);
+    }
+    h1 {
+      text-align: center;
+      color: var(--on-surface);
+    }
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .logo { max-width: 100px; }
+    .tagline {
+      font-family: var(--serif-font);
+      font-size: 22px;
+      color: var(--primary);
+      margin-top: 5px;
+      font-weight: bold;
+    }
+    /* 채널 영역 */
+    #channelSection {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    #channelInput {
+      padding: 8px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: var(--corner-radius);
+      width: 200px;
+    }
+    #channelStatus {
+      margin-left: 10px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    /* 메모장/노트패드 영역 */
+    #notepadContainer {
+      width: 80%;
+      max-width: 800px;
+      margin: 0 auto 20px;
+      border: 1px solid #ccc;
+      background-color: var(--surface);
+      border-radius: var(--corner-radius);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+      padding: 20px;
+    }
+    #notepad {
+      min-height: 400px;
+      word-wrap: break-word;
+      white-space: normal;
+      outline: none;
+    }
+    #notepad p {
+      margin: 0;
+      line-height: 1.5;
+    }
+    /* 하단 툴바 (서식 버튼) */
+    #toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px;
+      background: 
+        linear-gradient(to bottom, transparent, rgba(0,0,0,0.2)),
+        var(--primary);
+      background-blend-mode: multiply;
+      padding: 8px;
+      border-radius: var(--corner-radius);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+      color: var(--on-primary);
+    }
+    #toolbar button,
+    #toolbar select,
+    #toolbar input[type="color"] {
+      background: var(--primary);
+      border: none;
+      color: var(--on-primary);
+      padding: var(--button-padding);
+      margin: 2px;
+      cursor: pointer;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      border-radius: var(--corner-radius);
+    }
+    #toolbar select {
+      font-size: 14px;
+      background-color: #fff;
+      color: var(--on-primary);
+      border-radius: var(--corner-radius);
+      padding: 2px 4px;
+    }
+    #toolbar input[type="color"] {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border: none;
+    }
+    #toolbar button:hover,
+    #toolbar select:hover,
+    #toolbar input[type="color"]:hover {
+      opacity: 0.85;
+    }
+    .tooltip {
+      position: relative;
+      display: inline-block;
+    }
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: auto;
+      background-color: rgba(51,51,51,0.85);
+      color: #fff;
+      text-align: center;
+      border-radius: calc(var(--corner-radius)/2);
+      padding: 4px 6px;
+      position: absolute;
+      z-index: 1;
+      bottom: 130%;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      white-space: nowrap;
+      font-size: 12px;
+    }
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
+    /* 텍스트 버튼(하이라이트 버튼) */
+    .highlight-btn {
+      background-color: var(--primary);
+      border: none;
+      padding: var(--button-padding);
+      border-radius: var(--corner-radius);
+      color: var(--on-primary);
+      cursor: pointer;
+      margin: 2px 0;
+      transition: transform 0.1s;
+      white-space: pre-wrap;
+    }
+    .highlight-btn:active { transform: scale(0.97); }
+    /* 설명 상자 (호버링 입력창) */
+    .explanation-box {
+      background-color: var(--surface);
+      border: 1px solid #ddd;
+      border-radius: var(--corner-radius);
+      padding: 8px;
+      margin-top: 4px;
+      animation: fadeIn 0.3s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .explanation-box input {
+      width: 100%;
+      font-family: inherit;
+      font-size: var(--font-size);
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      background-color: #fff;
+    }
+    /* 공유 요청 영역 (공유된 내용 채택) */
+    #shareOffer {
+      text-align: center;
+      margin: 10px auto;
+    }
+    #shareOffer button {
+      background-color: var(--primary);
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: var(--corner-radius);
+      cursor: pointer;
+      font-size: var(--font-size);
+      color: var(--on-primary);
+      transition: background-color 0.2s, transform 0.1s;
+    }
+    #shareOffer button:hover {
+      background-color: var(--on-primary);
+      color: var(--primary);
+    }
+    @media screen and (max-width: 600px) {
+      #notepadContainer { width: 100%; padding: 12px; }
+      #toolbar { flex-direction: column; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- 헤더 -->
+  <header>
+    <img src="logo.png" alt="Homerlex Logo" class="logo">
+    <div class="tagline">Homerlex – Word Editor</div>
+  </header>
+  
+  <!-- 채널 영역 -->
+  <div id="channelSection">
+    <input type="text" id="channelInput" placeholder="채널 단어를 입력하세요">
+    <button id="joinChannelBtn">채널 연결</button>
+    <button id="leaveChannelBtn">채널 종료</button>
+    <!-- 호스트만 보일 공유 버튼 -->
+    <button id="shareBtn" style="display: none;">공유</button>
+    <span id="channelStatus">채널 없음</span>
+  </div>
+  
+  <!-- 노트패드 영역 -->
+  <div id="notepadContainer">
+    <div id="notepad" contenteditable="true">
+      <p>여기에 작성한 내용이 저장됩니다.</p>
+    </div>
+  </div>
+  
+  <!-- 툴바 (서식 버튼들) -->
+  <div id="toolbar">
+    <button id="convertBtn">텍스트 버튼 적용</button>
+    <button class="format-btn" onclick="execCmd('bold')" title="굵게">
+      <span class="material-icons">format_bold</span>
+    </button>
+    <button class="format-btn" onclick="execCmd('italic')" title="기울임">
+      <span class="material-icons">format_italic</span>
+    </button>
+    <button class="format-btn" onclick="execCmd('underline')" title="밑줄">
+      <span class="material-icons">format_underlined</span>
+    </button>
+    <button class="format-btn" onclick="execCmd('strikeThrough')" title="취소선">
+      <span class="material-icons">strikethrough_s</span>
+    </button>
+    <button class="format-btn" onclick="execCmd('justifyLeft')" title="좌측 정렬">
+      <span class="material-icons">format_align_left</span>
+    </button>
+    <button class="format-btn" onclick="execCmd('justifyCenter')" title="중앙 정렬">
+      <span class="material-icons">format_align_center</span>
+    </button>
+    <button class="format-btn" onclick="execCmd('justifyRight')" title="우측 정렬">
+      <span class="material-icons">format_align_right</span>
+    </button>
+  </div>
+  
+  <!-- 공유 요청 영역 (공유된 내용 채택) -->
+  <div id="shareOffer"></div>
+  
+  <!-- BroadcastChannel 기반 자동 동기화 -->
+  <script>
+    // 이 코드는 BroadcastChannel API를 사용하여
+    // 동일 도메인(또는 document.domain이 동일하게 설정된 하위 도메인) 내에서 실시간으로 에디터 내용이 공유되도록 합니다.
+    const bc = new BroadcastChannel('homerlexChannel');
+    
+    // 에디터 내용이 변경되면 브로드캐스트합니다.
+    function broadcastContent() {
+      const content = document.getElementById('notepad').innerHTML;
+      bc.postMessage({ type: 'contentUpdate', content: content });
+    }
+    
+    // 다른 탭이나 하위 도메인에서 메시지를 수신하면 에디터 내용 업데이트 (단, 사용자가 직접 작성 중이면 덮어씌우지 않도록 주의)
+    bc.onmessage = (event) => {
+      if (event.data.type === 'contentUpdate') {
+        // 단순 동기화를 위해, 수신된 내용을 바로 적용합니다.
+        document.getElementById('notepad').innerHTML = event.data.content;
+      }
+      // 호스트가 공유 요청 시 보낸 데이터 처리: 공유 요청 영역에 채택 버튼 표시
+      if (event.data.type === 'shareRequest') {
+        document.getElementById('shareOffer').innerHTML =
+          '<button onclick="adoptSharedContent()">공유된 내용 채택</button>' +
+          '<span> - 공유된 내용이 있습니다.</span>';
+        // 임시 저장: 공유된 내용을 기억해 둡니다.
+        document.getElementById('shareOffer').dataset.sharedContent = event.data.content;
+      }
+    };
+    
+    // 에디터의 입력 이벤트에 의해 내용이 변경되면 자동으로 브로드캐스트
+    document.getElementById('notepad').addEventListener('input', broadcastContent);
+  </script>
+  
+  <!-- 공유 기능: 호스트가 공유 버튼 누르면 현재 에디터 내용을 공유 요청 -->
+  <script>
+    // 호스트용 공유 버튼 이벤트 (이 기능은 브로드캐스트 메시지로 모든 참여자에게 공유 요청을 보냅니다)
+    document.getElementById("shareBtn").addEventListener("click", function() {
+      const contentToShare = document.getElementById("notepad").innerHTML;
+      // 공유 요청 메시지 보내기
+      bc.postMessage({ type: "shareRequest", content: contentToShare });
+      alert("공유 요청 전송됨 (채널 내 모든 참여자에게 공유됨)");
+    });
+  
+    // 공유된 내용을 채택하는 함수 (다른 참가자가 공유 요청을 확인하고 채택 버튼을 누르면 실행)
+    function adoptSharedContent() {
+      const sharedContent = document.getElementById("shareOffer").dataset.sharedContent;
+      if (sharedContent) {
+        document.getElementById("notepad").innerHTML = sharedContent;
+        // 공유 채택 후, 공유 요청 영역 초기화
+        document.getElementById("shareOffer").innerHTML = "";
+        bc.postMessage({ type: 'contentUpdate', content: sharedContent });
+        alert("공유된 내용이 채택되었습니다.");
+      }
+    }
+  </script>
+  
+  <!-- 기존 Microsoft Word 서식 및 텍스트 버튼 기능 -->
+  <script>
+    function execCmd(command) {
+      document.execCommand(command, false, null);
+    }
+    
+    function convertSelectedText() {
+      const selection = window.getSelection();
+      if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        const selectedText = range.toString().trim();
+        if (!selectedText) return;
+        const fragment = document.createDocumentFragment();
+        selectedText.split(/\n/).forEach(line => {
+          const trimmedLine = line.trim();
+          if (!trimmedLine) return;
+          const btn = document.createElement("button");
+          btn.className = "highlight-btn";
+          btn.textContent = trimmedLine;
+          btn.dataset.explanationId = Math.random().toString(36).substr(2, 9);
+          fragment.appendChild(btn);
+          fragment.appendChild(document.createElement("br"));
+          btn.addEventListener("click", toggleExplanation);
+        });
+        range.deleteContents();
+        range.insertNode(fragment);
+        selection.removeAllRanges();
+      }
+    }
+    
+    function toggleExplanation(event) {
+      event.stopPropagation();
+      const btn = event.target.closest("button");
+      const id = btn.dataset.explanationId;
+      let exBox = document.getElementById(id);
+      if (exBox) {
+        exBox.style.display = (exBox.style.display === "none") ? "block" : "none";
+      } else {
+        exBox = document.createElement("div");
+        exBox.className = "explanation-box";
+        exBox.id = id;
+        const input = document.createElement("input");
+        input.type = "text";
+        input.placeholder = "설명을 입력하세요...";
+        input.addEventListener("keydown", function(e) {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            const val = input.value.trim();
+            if (!val) { alert("설명을 입력해주세요."); return; }
+            exBox.innerHTML = "<p>" + val + "</p>";
+          }
+        });
+        exBox.appendChild(input);
+        btn.parentNode.insertBefore(exBox, btn.nextSibling);
+      }
+    }
+    
+    // 고아 설명 상자 자동 정리
+    function cleanupOrphanExplanationBoxes() {
+      const boxes = document.querySelectorAll('.explanation-box');
+      boxes.forEach(box => {
+        const id = box.id;
+        if (!document.querySelector("button[data-explanation-id='" + id + "']")) {
+          box.remove();
+        }
+      });
+    }
+    const container = document.getElementById("notepadContainer");
+    const observer = new MutationObserver(() => { cleanupOrphanExplanationBoxes(); });
+    observer.observe(container, { childList: true, subtree: true });
+  </script>
+</body>
+</html>
