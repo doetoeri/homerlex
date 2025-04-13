@@ -385,12 +385,11 @@
       localStorage.setItem(storageKeyPrefix + activeTab, document.getElementById("notepad").innerHTML);
     });
     
-    // 서식 적용 함수
+    // ===== 서식 관련 함수 =====
     function execCmd(command) {
       document.execCommand(command, false, null);
     }
     
-    // 텍스트 버튼 변환 함수
     function convertSelectedText() {
       const sel = window.getSelection();
       if (sel.rangeCount === 0) return;
@@ -398,7 +397,7 @@
       const selectedStr = range.toString();
       if (selectedStr.trim() === "") return;
       
-      // 기존 하이라이트 버튼이 있으면 원복(토글)
+      // 기존 하이라이트 버튼 있으면 원복 (토글)
       let foundButton = false;
       function searchForButton(node) {
         if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains("highlight-btn")) {
@@ -433,7 +432,7 @@
           const btn = document.createElement("button");
           btn.className = "highlight-btn";
           btn.textContent = line.trim();
-          // 여기서 텍스트 버튼에 적용할 추가 정보를 저장할 수 있음 (예: data-button-text)
+          // 추가 정보: data-button-text 속성에 저장 (버튼 텍스트)
           btn.setAttribute("data-button-text", line.trim());
           frag.appendChild(btn);
           frag.appendChild(document.createElement("br"));
@@ -451,7 +450,7 @@
     
     document.getElementById("convertBtn").addEventListener("click", convertSelectedText);
     
-    // 호버 설명 토글 함수
+    // ===== 호버 설명 토글 함수 =====
     function toggleExplanation(e) {
       e.stopPropagation();
       const btn = e.currentTarget;
@@ -479,7 +478,7 @@
       }
     }
     
-    // 고아 설명 상자 자동 정리
+    // ===== 고아 설명 상자 자동 정리 =====
     function cleanupOrphanExplanationBoxes() {
       const boxes = document.querySelectorAll('.explanation-box');
       boxes.forEach(box => {
@@ -494,27 +493,7 @@
     const observer = new MutationObserver(cleanupOrphanExplanationBoxes);
     observer.observe(notepadContainer, { childList: true, subtree: true });
     
-    // ===== HXM 파일 Import/Export 기능 =====
-    
-    // Helper: 파일 input change 이벤트 핸들러 (Import .hxm)
-    function importHxmFile(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(ev) {
-        try {
-          const data = JSON.parse(ev.target.result);
-          reconstructNotepadFromHxm(data);
-        } catch (err) {
-          alert("파일 형식 오류: 올바른 .hxm 파일이 아닙니다.");
-        }
-      };
-      reader.readAsText(file);
-    }
-    
-    document.getElementById("hxmInput").addEventListener("change", importHxmFile);
-    
-    // Helper: 구간별 시작 인덱스 계산 (아래: 전체 notepad의 내용을 기준)
+    // ===== .hxm 파일 Import/Export 기능 =====
     function getElementStartIndex(elem) {
       const range = document.createRange();
       const notepad = document.getElementById("notepad");
@@ -523,12 +502,11 @@
       return range.toString().length;
     }
     
-    // Export .hxm: 현재 내용을 읽어 평문과 스타일 범위를 계산하여 JSON 파일 생성
     function exportHxm() {
       const notepad = document.getElementById("notepad");
       const plainText = notepad.innerText;
       
-      // Bold 범위: 모든 <b> 태그를 찾는다.
+      // Bold 범위: <b> 태그 (예시)
       const boldElements = notepad.querySelectorAll("b");
       const boldRanges = [];
       boldElements.forEach(elem => {
@@ -537,13 +515,12 @@
         boldRanges.push({ start: start, end: start + length });
       });
       
-      // Text Button 범위: 모든 .highlight-btn 버튼
+      // Text Button 범위: .highlight-btn 버튼
       const tbElements = notepad.querySelectorAll("button.highlight-btn");
       const textButtonRanges = [];
       tbElements.forEach(elem => {
         const start = getElementStartIndex(elem);
         const length = elem.innerText.length;
-        // buttonText는 data-button-text attribute에 저장된 값 사용 (또는 innerText)
         const buttonText = elem.getAttribute("data-button-text") || elem.innerText;
         textButtonRanges.push({ start: start, end: start + length, buttonText: buttonText });
       });
@@ -557,20 +534,19 @@
         }
       };
       
-      const blob = new Blob([JSON.stringify(hxmData, null, 2)], { type: "application/json" });
+      // MIME 타입을 application/octet-stream으로 설정하여 확장자 자동 추가 방지
+      const blob = new Blob([JSON.stringify(hxmData, null, 2)], { type: "application/octet-stream" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
       a.download = "memo.hxm";
       a.click();
     }
     
-    // Reconstruction: 입력받은 HXM JSON 데이터를 기반으로 HTML을 재구성
     function reconstructHTMLFromHxm(data) {
       let text = data.content;
       const boldRanges = data.styles.bold || [];
       const tbRanges = data.styles.textButton || [];
       
-      // 마커 배열 생성 (각 마커는 {index, type, [buttonText]})
       const markers = [];
       boldRanges.forEach(range => {
         markers.push({ index: range.start, type: "boldStart" });
@@ -581,7 +557,6 @@
         markers.push({ index: range.end, type: "tbEnd" });
       });
       
-      // 내림차순 정렬 (인덱스 큰 것부터 처리)
       markers.sort((a, b) => b.index - a.index);
       
       markers.forEach(marker => {
@@ -603,6 +578,24 @@
       const html = reconstructHTMLFromHxm(data);
       document.getElementById("notepad").innerHTML = html;
     }
+    
+    function importHxmFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        try {
+          const data = JSON.parse(ev.target.result);
+          reconstructNotepadFromHxm(data);
+        } catch (err) {
+          alert("파일 형식 오류: 올바른 .hxm 파일이 아닙니다.");
+        }
+      };
+      reader.readAsText(file);
+    }
+    
+    document.getElementById("hxmInput").addEventListener("change", importHxmFile);
+    
   </script>
 </body>
 </html>
