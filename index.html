@@ -6,13 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Homerlex – Word Editor</title>
   <link rel="icon" type="image/png" href="icon.png">
-  
-  <!-- Google Fonts: Noto Sans (본문) & Instrument Serif (태그라인) -->
+  <!-- Google Fonts: Noto Sans (본문), Instrument Serif (태그라인) -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&family=Instrument+Serif&display=swap" rel="stylesheet">
-  
   <!-- Material Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  
   <style>
     :root {
       --primary: #2196F3;
@@ -26,7 +23,6 @@
       --font-size: 16px;
       --button-padding: 0.5rem 0.75rem;
     }
-    
     body {
       background-color: var(--background);
       font-family: var(--font-family);
@@ -37,9 +33,7 @@
       text-align: center;
       margin-bottom: 20px;
     }
-    .logo {
-      max-width: 100px;
-    }
+    .logo { max-width: 100px; }
     .tagline {
       font-family: var(--serif-font);
       font-size: 22px;
@@ -47,7 +41,6 @@
       margin-top: 5px;
       font-weight: bold;
     }
-    
     /* 탭바 영역 */
     #tabBar {
       display: flex;
@@ -77,7 +70,6 @@
       border: none;
       padding: 8px;
     }
-    
     /* 노트패드 영역 */
     #notepadContainer {
       width: 80%;
@@ -100,8 +92,7 @@
       margin: 0;
       line-height: 1.5;
     }
-    
-    /* 하단 툴바 (서식 버튼 등) */
+    /* 하단 툴바 영역 */
     #toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -142,7 +133,6 @@
     #toolbar input[type="color"]:hover {
       opacity: 0.85;
     }
-    
     /* 텍스트 버튼 변환 (하이라이트 버튼) */
     .highlight-btn {
       background: var(--primary);
@@ -156,7 +146,6 @@
       white-space: pre-wrap;
     }
     .highlight-btn:active { transform: scale(0.97); }
-    
     /* 호버링 설명 상자 */
     .explanation-box {
       background: var(--surface);
@@ -177,7 +166,6 @@
       border-radius: 4px;
       font-size: var(--font-size);
     }
-    
     @media screen and (max-width: 600px) {
       #notepadContainer { width: 100%; padding: 12px; }
       #toolbar { flex-direction: column; gap: 8px; }
@@ -192,7 +180,6 @@
   
   <!-- 탭바 영역 -->
   <div id="tabBar">
-    <!-- 기존 탭들을 표시할 공간과 새 탭 버튼 -->
     <button class="tab-btn active" data-tab="1">Document 1</button>
     <button class="tab-btn new-tab" id="newTabBtn">
       <span class="material-icons">add</span>
@@ -233,15 +220,14 @@
   </div>
   
   <script>
-    // ── 탭 및 로컬 저장 관련 ──
+    // ── 탭 및 로컬 저장 기능 ──
     let activeTab = "1";
     
-    // 탭바 이벤트 섹션
     const tabBar = document.getElementById('tabBar');
     tabBar.addEventListener('click', function(e) {
       const tab = e.target.closest('.tab-btn');
       if (!tab || tab.classList.contains('new-tab')) return;
-      // 저장하고 다른 탭으로 전환
+      // 저장 후 전환
       localStorage.setItem("notepad-content-" + activeTab, document.getElementById("notepad").innerHTML);
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       tab.classList.add('active');
@@ -250,7 +236,6 @@
       document.getElementById("notepad").innerHTML = stored !== null ? stored : "<p>새 문서를 작성하세요.</p>";
     });
     
-    // 새 탭 생성
     document.getElementById('newTabBtn').addEventListener('click', function() {
       const tabCount = document.querySelectorAll('.tab-btn').length;
       const newTab = document.createElement('button');
@@ -261,7 +246,6 @@
       localStorage.setItem("notepad-content-" + tabCount, "");
     });
     
-    // 탭 이름 변경 (더블클릭)
     tabBar.addEventListener('dblclick', function(e) {
       const btn = e.target.closest('.tab-btn');
       if (btn && !btn.classList.contains('new-tab')) {
@@ -272,7 +256,6 @@
       }
     });
     
-    // 페이지 로드 시 현재 활성 탭 내용 불러오기
     window.addEventListener('DOMContentLoaded', function() {
       const stored = localStorage.getItem("notepad-content-" + activeTab);
       if (stored !== null) {
@@ -280,67 +263,87 @@
       }
     });
     
-    // ── 워드 프로세서 서식 및 텍스트 버튼 변환 ──
+    document.getElementById("notepad").addEventListener("input", function() {
+      localStorage.setItem("notepad-content-" + activeTab, document.getElementById("notepad").innerHTML);
+    });
+    
+    // ── 서식 커맨드 함수 ──
     function execCmd(command) {
       document.execCommand(command, false, null);
     }
     
-    // 텍스트를 선택하여 버튼으로 변환
+    // ── 텍스트 버튼 변환 ──
     function convertSelectedText() {
       const selection = window.getSelection();
       if (selection.rangeCount > 0) {
         const range = selection.getRangeAt(0);
-        const txt = range.toString().trim();
-        if (!txt) return;
-        const frag = document.createDocumentFragment();
-        txt.split(/\n/).forEach(line => {
-          const trimmed = line.trim();
+        const text = range.toString().trim();
+        if (!text) return;
+        const fragment = document.createDocumentFragment();
+        text.split(/\n/).forEach(line => {
+          let trimmed = line.trim();
           if (!trimmed) return;
           const btn = document.createElement("button");
           btn.className = "highlight-btn";
+          // 텍스트 버튼에 innerText 대신 textContent 사용
           btn.textContent = trimmed;
+          // 고유한 설명 ID 부여
           btn.dataset.explanationId = Math.random().toString(36).substr(2, 9);
-          frag.appendChild(btn);
-          frag.appendChild(document.createElement("br"));
-          btn.addEventListener("click", toggleExplanation);
+          fragment.appendChild(btn);
+          fragment.appendChild(document.createElement("br"));
+          // 익명 함수로 currentTarget 사용 (안전한 이벤트 객체 전달)
+          btn.addEventListener("click", function(e) {
+            e.stopPropagation();
+            toggleExplanation(e);
+          });
         });
         range.deleteContents();
-        range.insertNode(frag);
+        range.insertNode(fragment);
         selection.removeAllRanges();
       }
     }
     
     document.getElementById("convertBtn").addEventListener("click", convertSelectedText);
     
-    // ── 호버링 설명 입력 ──
-    function toggleExplanation(event) {
-      event.stopPropagation();
-      const btn = event.target.closest("button");
+    // ── 호버링 설명 토글 ──
+    function toggleExplanation(e) {
+      // currentTarget을 사용하면 올바른 버튼을 참조합니다.
+      const btn = e.currentTarget;
       const id = btn.dataset.explanationId;
       let box = document.getElementById(id);
       if (box) {
-        box.style.display = (box.style.display === "none") ? "block" : "none";
+        // 존재하면 토글
+        box.style.display = (box.style.display === "none" || box.style.display === "") ? "block" : "none";
       } else {
+        // 없으면 생성
         box = document.createElement("div");
         box.className = "explanation-box";
         box.id = id;
-        const inp = document.createElement("input");
-        inp.type = "text";
-        inp.placeholder = "설명을 입력하세요...";
-        inp.addEventListener("keydown", function(e) {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            const val = inp.value.trim();
-            if (!val) { alert("설명을 입력해주세요."); return; }
+        
+        const inputField = document.createElement("input");
+        inputField.type = "text";
+        inputField.placeholder = "설명을 입력하세요...";
+        
+        inputField.addEventListener("keydown", function(ev) {
+          if (ev.key === "Enter") {
+            ev.preventDefault();
+            const val = inputField.value.trim();
+            if (!val) {
+              alert("설명을 입력해주세요.");
+              return;
+            }
+            // 입력한 값을 p 태그로 변경하여 설명 상자에 표시
             box.innerHTML = "<p>" + val + "</p>";
           }
         });
-        box.appendChild(inp);
+        
+        box.appendChild(inputField);
+        // 버튼 바로 뒤에 삽입
         btn.parentNode.insertBefore(box, btn.nextSibling);
       }
     }
     
-    // ── 고아 설명 상자 자동 정리 ──
+    // ── 고아(불필요한) 설명 상자 자동 제거 ──
     function cleanupOrphanExplanationBoxes() {
       const boxes = document.querySelectorAll('.explanation-box');
       boxes.forEach(box => {
@@ -350,9 +353,9 @@
         }
       });
     }
-    const notepadCont = document.getElementById("notepadContainer");
-    const mo = new MutationObserver(cleanupOrphanExplanationBoxes);
-    mo.observe(notepadCont, { childList: true, subtree: true });
+    const notepadContainer = document.getElementById("notepadContainer");
+    const observer = new MutationObserver(cleanupOrphanExplanationBoxes);
+    observer.observe(notepadContainer, { childList: true, subtree: true });
   </script>
 </body>
 </html>
