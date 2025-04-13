@@ -25,27 +25,29 @@
       --font-size: 16px;
       --button-padding: 0.5rem 0.75rem;
     }
-    body {
-      background-color: var(--background);
-      font-family: var(--font-family);
-      margin: 20px;
-      color: var(--on-surface);
-    }
+    
+    /* 헤더: 좌측 상단 배치, 아이콘과 사이트 제목 가로 배치 */
     header {
-      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 10px 20px;
+      background-color: var(--surface);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       margin-bottom: 20px;
     }
     .logo {
-      max-width: 100px;
+      max-width: 50px;
+      margin-right: 10px;
     }
-    .tagline {
+    .site-title {
       font-family: var(--serif-font);
-      font-size: 22px;
-      color: var(--primary);
-      margin-top: 5px;
+      font-size: 32px;
       font-weight: bold;
+      color: #000000;
     }
-    /* 탭바 영역 – 각 탭은 별도의 <div class="tab">로 관리 */
+    
+    /* 탭바 영역 */
     #tabBar {
       display: flex;
       justify-content: center;
@@ -60,11 +62,12 @@
       border: 1px solid #ccc;
       padding: 4px 8px;
       border-radius: var(--corner-radius);
+      cursor: pointer;
     }
     .tab.active .tab-label {
       background-color: var(--primary);
       color: var(--on-primary);
-      padding: 4px;
+      padding: 4px 8px;
       border-radius: var(--corner-radius);
       font-weight: bold;
     }
@@ -87,12 +90,6 @@
     }
     .tab .tab-actions button:hover {
       color: var(--primary);
-    }
-    .tab-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 8px;
     }
     .new-tab-btn {
       background: none;
@@ -166,7 +163,7 @@
       opacity: 0.85;
     }
     
-    /* 텍스트 버튼 변환 (하이라이트 버튼) */
+    /* 텍스트 버튼 변환 (하이라이트 버튼) - 내부 글자 크기는 일반 글자 크기(16px)로, 볼드체 */
     .highlight-btn {
       background: var(--primary);
       border: none;
@@ -177,6 +174,8 @@
       margin: 2px 0;
       transition: transform 0.1s;
       white-space: pre-wrap;
+      font-size: var(--font-size);
+      font-weight: bold;
     }
     .highlight-btn:active {
       transform: scale(0.97);
@@ -210,12 +209,13 @@
   </style>
 </head>
 <body>
+  <!-- 헤더: 좌측 상단에 아이콘과 사이트 제목 배치 -->
   <header>
     <img src="logo.png" alt="Homerlex Logo" class="logo">
-    <div class="tagline">Homerlex – Word Editor</div>
+    <div class="site-title">Homerlex</div>
   </header>
   
-  <!-- 탭바 영역: 탭 라벨, 탭 이름 변경, 탭 삭제 -->
+  <!-- 탭바 영역 -->
   <div id="tabBar" class="tab-container">
     <div class="tab" data-tab="1">
       <span class="tab-label">Document 1</span>
@@ -223,7 +223,7 @@
         <button class="tab-rename" title="이름 변경">
           <span class="material-icons" style="font-size:16px;">edit</span>
         </button>
-        <button class="tab-delete" title="삭제">
+        <button class="tab-delete" title="탭 삭제">
           <span class="material-icons" style="font-size:16px;">delete</span>
         </button>
       </div>
@@ -240,7 +240,7 @@
     </div>
   </div>
   
-  <!-- 하단 툴바 영역 (서식 버튼들) -->
+  <!-- 하단 툴바 (서식 버튼들) -->
   <div id="toolbar">
     <button id="convertBtn">텍스트 버튼 적용</button>
     <button class="format-btn" onclick="execCmd('bold')" title="굵게">
@@ -269,20 +269,9 @@
   <script>
     // ── 1. 탭 및 로컬 저장 기능 ──
     let activeTab = "1";
-    const storageKey = "notepad-content-" + activeTab;
+    const storageKeyPrefix = "notepad-content-";
     
-    // 함수: 현재 활성 탭의 내용을 LocalStorage에 저장
-    function saveActiveTabContent() {
-      localStorage.setItem("notepad-content-" + activeTab, document.getElementById("notepad").innerHTML);
-    }
-    
-    // 함수: 활성 탭 내용 불러오기
-    function loadActiveTabContent() {
-      const stored = localStorage.getItem("notepad-content-" + activeTab);
-      document.getElementById("notepad").innerHTML = (stored !== null) ? stored : "<p>새 문서를 작성하세요.</p>";
-    }
-    
-    // 탭바 부분: 버튼으로 구성된 탭을 위한 헬퍼 함수
+    // 탭 생성 헬퍼 함수
     function createTab(tabId, tabName) {
       const tabDiv = document.createElement("div");
       tabDiv.className = "tab";
@@ -318,20 +307,16 @@
       deleteBtn.addEventListener("click", function(e) {
         e.stopPropagation();
         if (confirm("이 탭을 삭제하시겠습니까?")) {
-          // 탭 삭제 시, LocalStorage에서 해당 키 삭제
-          localStorage.removeItem("notepad-content-" + tabDiv.dataset.tab);
+          localStorage.removeItem(storageKeyPrefix + tabDiv.dataset.tab);
           tabDiv.remove();
-          // 삭제 후 남은 탭 중 첫번째를 활성화
           const remaining = document.querySelectorAll(".tab");
           if (remaining.length > 0) {
             activeTab = remaining[0].dataset.tab;
             remaining[0].classList.add("active");
             loadActiveTabContent();
           } else {
-            // 남은 탭이 없으면 새 탭 생성
             activeTab = "1";
-            createNewTab("Document 1");
-            loadActiveTabContent();
+            location.reload();
           }
         }
       });
@@ -339,9 +324,8 @@
       
       tabDiv.appendChild(actionsDiv);
       
-      // 탭 전체 클릭 시 활성화 처리
+      // 탭 클릭 시 활성화
       tabDiv.addEventListener("click", function() {
-        // 저장 후 활성화 전환
         saveActiveTabContent();
         document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
         tabDiv.classList.add("active");
@@ -352,78 +336,79 @@
       return tabDiv;
     }
     
-    // 초기 탭 생성 (탭바에 추가)
+    // 저장/불러오기 함수
+    function saveActiveTabContent() {
+      localStorage.setItem(storageKeyPrefix + activeTab, document.getElementById("notepad").innerHTML);
+    }
+    
+    function loadActiveTabContent() {
+      const stored = localStorage.getItem(storageKeyPrefix + activeTab);
+      document.getElementById("notepad").innerHTML = (stored !== null) ? stored : "<p>새 문서를 작성하세요.</p>";
+    }
+    
     const tabBar = document.getElementById("tabBar");
-    // 기존 첫 탭 내용 초기화
-    tabBar.querySelectorAll(".tab").forEach(el => el.remove());
+    // 초기 탭 생성 (초기 탭 제거 후 새로 생성)
+    const existingTabs = document.querySelectorAll(".tab");
+    existingTabs.forEach(node => node.remove());
     const firstTab = createTab("1", "Document 1");
     firstTab.classList.add("active");
     tabBar.insertBefore(firstTab, document.getElementById("newTabBtn"));
     
-    // 새 탭 생성 버튼 이벤트
     document.getElementById("newTabBtn").addEventListener("click", function() {
       const tabs = document.querySelectorAll(".tab");
       const newId = (tabs.length + 1).toString();
       const newTab = createTab(newId, "Document " + newId);
       tabBar.insertBefore(newTab, this);
-      // 즉시 전환하지 않고, 사용자가 클릭하면 활성화하도록 함
     });
     
-    // 페이지 로드 시 활성 탭 내용 불러오기
-    window.addEventListener('DOMContentLoaded', loadActiveTabContent);
-    
-    // ── 2. 노트패드 자동 저장 (입력 시마다 LocalStorage 업데이트) ──
+    window.addEventListener("DOMContentLoaded", loadActiveTabContent);
     document.getElementById("notepad").addEventListener("input", function() {
-      localStorage.setItem("notepad-content-" + activeTab, document.getElementById("notepad").innerHTML);
+      localStorage.setItem(storageKeyPrefix + activeTab, document.getElementById("notepad").innerHTML);
     });
     
-    // ── 3. 서식 명령 함수 ──
+    // ── 2. 서식 및 텍스트 버튼 관련 함수 ──
     function execCmd(command) {
       document.execCommand(command, false, null);
     }
     
-    // ── 4. 텍스트 버튼 변환 (공백은 무시, 이미 적용된 경우 원복 처리) ──
+    // 텍스트 버튼 적용 토글: 이미 버튼으로 변환되어 있다면 원래 텍스트로 복원
     function convertSelectedText() {
-      const selection = window.getSelection();
-      if (selection.rangeCount === 0) return;
-      const range = selection.getRangeAt(0);
-      // 선택 텍스트가 모두 공백이면 적용하지 않음
+      const sel = window.getSelection();
+      if (sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
       const selectedStr = range.toString();
       if (selectedStr.trim() === "") return;
       
-      // 만약 선택 영역 내에 이미 하이라이트 버튼이 포함되었으면 제거(전체 버튼이 있다면)
+      // 추후 기존 버튼 중 겹치는 부분이 있으면 제거(전체 영역에 대해 검사)
+      const container = document.createElement("div");
+      container.appendChild(range.cloneContents());
+      if (container.textContent.trim() === "") return;
+      
       const fragment = document.createDocumentFragment();
-      // split('\n')로 줄별로 처리
+      // 줄 단위로 분리, 공백만 있는 줄은 무시
       selectedStr.split(/\n/).forEach(line => {
-        const trimmed = line.trim();
-        if (!trimmed) {
-          // 빈 줄은 그대로 텍스트 노드로 추가
-          fragment.appendChild(document.createTextNode(line));
-          fragment.appendChild(document.createElement("br"));
-        } else {
-          // 생성된 버튼이 이미 적용되어 있는 경우(예, 동일 텍스트를 포함한 버튼) - 
-          // 여기서는 간단하게 새로운 버튼을 삽입하도록 하고, 나중에 전체 영역에 대해 중복 제거.
-          const btn = document.createElement("button");
-          btn.className = "highlight-btn";
-          btn.textContent = trimmed;
-          btn.dataset.explanationId = Math.random().toString(36).substr(2, 9);
-          fragment.appendChild(btn);
-          fragment.appendChild(document.createElement("br"));
-          btn.addEventListener("click", function(e) {
-            e.stopPropagation();
-            toggleExplanation(e);
-          });
-        }
+        if (line.trim() === "") return; // 빈 줄은 그대로
+        // 새로운 버튼 생성
+        const btn = document.createElement("button");
+        btn.className = "highlight-btn";
+        btn.textContent = line.trim();
+        btn.dataset.explanationId = Math.random().toString(36).substr(2, 9);
+        fragment.appendChild(btn);
+        fragment.appendChild(document.createElement("br"));
+        btn.addEventListener("click", function(e) {
+          e.stopPropagation();
+          toggleExplanation(e);
+        });
       });
       range.deleteContents();
       range.insertNode(fragment);
-      selection.removeAllRanges();
-      // 저장 업데이트
+      sel.removeAllRanges();
       document.getElementById("notepad").dispatchEvent(new Event("input"));
     }
+    
     document.getElementById("convertBtn").addEventListener("click", convertSelectedText);
     
-    // ── 5. 호버링 설명 토글 ──
+    // ── 호버링 설명 토글 ──
     function toggleExplanation(e) {
       e.stopPropagation();
       const btn = e.currentTarget;
@@ -439,7 +424,7 @@
         inputField.type = "text";
         inputField.placeholder = "설명을 입력하세요...";
         inputField.addEventListener("keydown", function(ev) {
-          if(ev.key === "Enter") {
+          if (ev.key === "Enter") {
             ev.preventDefault();
             const val = inputField.value.trim();
             if (!val) { alert("설명을 입력해주세요."); return; }
@@ -451,7 +436,7 @@
       }
     }
     
-    // ── 6. 고아 설명 상자 자동 정리 ──
+    // ── 고아 설명 상자 자동 정리 ──
     function cleanupOrphanExplanationBoxes() {
       const boxes = document.querySelectorAll('.explanation-box');
       boxes.forEach(box => {
