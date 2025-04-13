@@ -2,286 +2,381 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <!-- 모바일 최적화를 위한 meta 태그 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Homerlex-Next innovation of Notepads.</title>
-  <!-- 파비콘 -->
+  <title>Homerlex – Word Editor</title>
   <link rel="icon" type="image/png" href="icon.png">
-  <!-- Pretendard 글꼴 (CDN) -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <!-- Google Fonts: Noto Sans (기본 서체) -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
   <!-- Material Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <!-- LZ‑String (문자 코드 공유 기능) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
   <style>
     :root {
-      --copilot-primary: #0078D4; /* 단색 파란색 */
-      --copilot-on-primary: #ffffff;
-      --copilot-surface: #ffffff;
-      --copilot-on-surface: #323130;
-      --copilot-background: #E3F2FD; /* 파스텔톤 배경 */
-      --copilot-corner-radius: 32px;
-      --copilot-font-family: 'Pretendard', sans-serif;
-      --copilot-font-size: 16px;
-      --toolbar-gap: 12px;
-      --tab-margin: 8px;
-      --md3-button-padding: 0.5rem 1rem;
+      --primary: #2196F3; /* 밝은 파랑 */
+      --on-primary: #ffffff;
+      --surface: #ffffff;
+      --on-surface: #323130;
+      --background: #F1F3F4;
+      --corner-radius: 20px; /* 둥근 정도 증가 */
+      --font-family: 'Noto Sans', sans-serif;
+      --font-size: 16px;
+      --button-padding: 0.5rem 0.75rem;
+      --toolbar-height: 48px;
     }
-    
-    /* 기본 레이아웃 */
     body {
-      background-color: var(--copilot-background);
-      font-family: var(--copilot-font-family);
+      background-color: var(--background);
+      font-family: var(--font-family);
       margin: 20px;
-      color: var(--copilot-on-surface);
+      color: var(--on-surface);
+      text-align: center;
     }
-    
     header {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 20px;
     }
-    /* 상단 로고 이미지: 크기를 줄여 최대 너비 100px로 설정 */
     .logo {
       max-width: 100px;
-      width: 100%;
-      height: auto;
     }
-    /* 태그라인: 로고 아래에 "Homerlex"만 간단하게 표시 */
     .tagline {
-      font-size: 18px;
-      color: var(--copilot-primary);
+      font-size: 22px;
+      color: var(--primary);
       margin-top: 5px;
+      font-weight: 700;
     }
-    
-    /* 탭바: 헤더 바로 아래 */
-    #tabBar {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: var(--tab-margin);
-      margin-bottom: 10px;
-    }
-    .tab-btn {
-      background-color: var(--copilot-surface);
-      border: none;
-      padding: 8px 16px;
-      border-radius: var(--copilot-corner-radius);
-      cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .tab-btn:hover {
-      background-color: #e1e1e1;
-    }
-    .tab-btn.active {
-      background-color: var(--copilot-primary);
-      color: var(--copilot-on-primary);
-      font-weight: bold;
-      transform: scale(1.05);
-    }
-    .tab-btn.new-tab {
-      font-size: 20px;
-      font-weight: bold;
-      background: none;
-      border: none;
-      padding: 8px;
-    }
-    
-    /* 메모장 컨테이너 (배경 그림자 제거) */
-    #notepadContainer {
-      position: relative;
+    /* 에디터 컨테이너 */
+    #editorContainer {
       width: 80%;
       max-width: 800px;
-      margin: 0 auto 20px;
-      border-radius: var(--copilot-corner-radius);
-      background-color: var(--copilot-surface);
+      margin: 0 auto;
+      background-color: var(--surface);
+      border: 1px solid #ccc;
+      border-radius: var(--corner-radius);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
     }
-    .notepad {
-      padding: 20px;
-      min-height: 400px;
-      word-wrap: break-word;
-      white-space: normal;
-    }
-    /* 텍스트 입력 영역의 <p> 태그 상하 margin 제거 */
-    .notepad p {
-      margin-top: 0;
-      margin-bottom: 0;
-      line-height: 1.5;
-    }
-    
-    /* 하단 툴바: 포맷 버튼 및 "텍스트 버튼 적용" 버튼 */
+    /* 툴바: 가로 그라데이션 + 하단 밝은 오버레이 */
     #toolbar {
       display: flex;
-      justify-content: center;
-      gap: var(--toolbar-gap);
       flex-wrap: wrap;
-      margin-top: 10px;
-      transition: all 0.3s ease;
+      justify-content: center;
+      align-items: center;
+      padding: 4px;
+      background: 
+        linear-gradient(to bottom, transparent, rgba(0,0,0,0.2)),
+        linear-gradient(to right, #64B5F6, var(--primary));
+      background-blend-mode: multiply;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+      color: var(--on-primary);
     }
-    .format-btn {
-      background-color: var(--copilot-surface);
-      color: var(--copilot-on-surface);
+    /* 툴팁 */
+    .tooltip {
+      position: relative;
+      display: inline-block;
+    }
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: auto;
+      background-color: rgba(51, 51, 51, 0.85);
+      color: #fff;
+      text-align: center;
+      border-radius: calc(var(--corner-radius) / 2);
+      padding: 4px 6px;
+      position: absolute;
+      z-index: 1;
+      bottom: 130%;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      white-space: nowrap;
+      font-size: 12px;
+    }
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
+    #toolbar button,
+    #toolbar select,
+    #toolbar input[type="color"] {
+      background: transparent;
       border: none;
-      width: 40px;
-      height: 40px;
+      color: var(--on-primary);
+      padding: var(--button-padding);
+      margin: 2px;
+      cursor: pointer;
+      font-size: 24px;
       display: flex;
       align-items: center;
-      justify-content: center;
-      border-radius: var(--copilot-corner-radius);
-      cursor: pointer;
-      transition: background-color 0.2s ease, transform 0.1s ease;
     }
-    .format-btn:hover {
-      background-color: #e1e1e1;
+    #toolbar select {
+      font-size: 14px;
+      background-color: var(--on-primary);
+      color: var(--primary);
+      border-radius: var(--corner-radius);
+      padding: 2px 4px;
     }
-    .format-btn:active {
-      transform: scale(0.98);
-    }
-    .format-btn .material-icons {
-      font-size: 24px;
-    }
-    #convertBtn {
-      background-color: var(--copilot-primary);
-      color: var(--copilot-on-primary);
+    #toolbar input[type="color"] {
+      width: 32px;
+      height: 32px;
+      padding: 0;
       border: none;
-      padding: var(--md3-button-padding);
-      border-radius: var(--copilot-corner-radius);
-      font-size: var(--copilot-font-size);
+    }
+    #toolbar button:hover,
+    #toolbar select:hover,
+    #toolbar input[type="color"]:hover {
+      opacity: 0.85;
+    }
+    /* 편집 영역 */
+    #sharedContent {
+      min-height: 300px;
+      padding: 10px;
+      text-align: left;
+      outline: none;
+      overflow: auto;
+    }
+    /* 오프라인 공유 영역 */
+    #offlineSharing {
+      text-align: center;
+      margin: 10px 0;
+      padding-bottom: 10px;
+      background-color: var(--surface);
+    }
+    #offlineSharing button {
+      background-color: var(--primary);
+      color: var(--on-primary);
+      border: none;
+      padding: var(--button-padding);
+      margin: 5px;
+      border-radius: var(--corner-radius);
       cursor: pointer;
-      transition: background-color 0.2s ease, transform 0.1s ease;
+      font-size: 16px;
     }
-    #convertBtn:hover {
-      background-color: var(--copilot-on-primary);
-      color: var(--copilot-primary);
-    }
-    
-    /* 변환 후 생성된 텍스트 버튼 (버튼 기능 재설계) */
+    /* 텍스트 버튼 변환 결과 (하이라이트 버튼) */
     .highlight-btn {
-      display: inline-block;
-      white-space: pre-wrap;
-      background-color: var(--copilot-primary);
+      background-color: var(--primary);
+      color: var(--on-primary);
       border: none;
-      padding: var(--md3-button-padding);
-      border-radius: var(--copilot-corner-radius);
-      color: var(--copilot-on-primary);
+      padding: var(--button-padding);
+      border-radius: var(--corner-radius);
+      font-family: var(--font-family);
+      font-size: 16px;
       cursor: pointer;
-      transition: transform 0.1s ease;
       margin: 2px 0;
-    }
-    .highlight-btn:hover {
-      /* 그림자 없음 */
+      transition: transform 0.1s ease;
     }
     .highlight-btn:active {
       transform: scale(0.97);
     }
-    
-    /* 설명 입력창: 입력창 뒤에 항상 흰색 배경 적용, 그림자 제거 */
+    /* 설명 상자 (텍스트 버튼과 연결) */
     .explanation-box {
-      background-color: var(--copilot-surface);
-      border-radius: var(--copilot-corner-radius);
-      padding: 15px;
-      margin-top: 5px;
-      animation: fadeIn 0.3s ease-out;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .explanation-box input {
-      width: 100%;
-      font-family: inherit;
-      font-size: var(--copilot-font-size);
+      background-color: var(--surface);
+      border: 1px solid #ddd;
+      border-radius: var(--corner-radius);
       padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      box-sizing: border-box;
-      background-color: #ffffff;
+      margin-top: 4px;
     }
-    
-    /* 모바일 전용 스타일 */
+    /* 반응형 */
     @media screen and (max-width: 600px) {
-      body { margin: 10px; }
-      #notepadContainer { width: 100%; }
-      #toolbar { flex-direction: column; align-items: center; }
-      .tab-btn, .format-btn, #convertBtn { width: 90%; margin-bottom: 8px; }
-      .logo { max-width: 80px; }
-      .tagline { font-size: 16px; }
+      #editorContainer { width: 100%; }
+      #toolbar { flex-direction: column; }
     }
   </style>
 </head>
 <body>
   <header>
     <img src="logo.png" alt="Homerlex Logo" class="logo">
-    <div class="tagline">Homerlex</div>
+    <div class="tagline">Homerlex – Word Editor</div>
   </header>
   
-  <div id="tabBar">
-    <button class="tab-btn active" data-tab="1">Document 1</button>
-    <button class="tab-btn new-tab" id="newTabBtn">
-      <span class="material-icons">add</span>
-    </button>
-  </div>
-  
-  <div id="notepadContainer">
-    <div id="notepad" contenteditable="true">
-      <p>여기에 메모를 작성하세요.<br>
-줄바꿈이 그대로 보존됩니다.<br>
-원하는 텍스트 블록을 선택한 후 "텍스트 버튼 적용"을 누르면,<br>
-각 줄마다 텍스트 버튼으로 변환됩니다.</p>
+  <div id="editorContainer">
+    <!-- 툴바 -->
+    <div id="toolbar">
+      <!-- 텍스트 버튼 변환 (툴팁 포함) -->
+      <span class="tooltip">
+        <button onclick="convertSelectedText()" title="텍스트 버튼 변환">
+          <span class="material-icons">text_fields</span>
+        </button>
+        <span class="tooltiptext">선택 텍스트를 버튼으로 변환</span>
+      </span>
+      <!-- Undo / Redo -->
+      <span class="tooltip">
+        <button onclick="execCmd('undo')" title="Undo">
+          <span class="material-icons">undo</span>
+        </button>
+        <span class="tooltiptext">실행 취소</span>
+      </span>
+      <span class="tooltip">
+        <button onclick="execCmd('redo')" title="Redo">
+          <span class="material-icons">redo</span>
+        </button>
+        <span class="tooltiptext">다시 실행</span>
+      </span>
+      <!-- 서식 -->
+      <span class="tooltip">
+        <button onclick="execCmd('bold')" title="Bold">
+          <span class="material-icons">format_bold</span>
+        </button>
+        <span class="tooltiptext">굵게</span>
+      </span>
+      <span class="tooltip">
+        <button onclick="execCmd('italic')" title="Italic">
+          <span class="material-icons">format_italic</span>
+        </button>
+        <span class="tooltiptext">기울임</span>
+      </span>
+      <span class="tooltip">
+        <button onclick="execCmd('underline')" title="Underline">
+          <span class="material-icons">format_underlined</span>
+        </button>
+        <span class="tooltiptext">밑줄</span>
+      </span>
+      <span class="tooltip">
+        <button onclick="execCmd('strikeThrough')" title="Strikethrough">
+          <span class="material-icons">strikethrough_s</span>
+        </button>
+        <span class="tooltiptext">취소선</span>
+      </span>
+      <!-- 글꼴 선택 -->
+      <span class="tooltip">
+        <select onchange="execCmd('fontName', this.value)" title="글꼴 선택">
+          <option value="Noto Sans" selected>Noto Sans</option>
+          <option value="Roboto">Roboto</option>
+          <option value="Open Sans">Open Sans</option>
+          <option value="Lato">Lato</option>
+          <option value="Montserrat">Montserrat</option>
+        </select>
+        <span class="tooltiptext">글꼴 변경</span>
+      </span>
+      <!-- 글자 크기 선택 -->
+      <span class="tooltip">
+        <select onchange="execCmd('fontSize', this.value)" title="글자 크기">
+          <option value="">크기</option>
+          <option value="1">10</option>
+          <option value="2">12</option>
+          <option value="3">14</option>
+          <option value="4">16</option>
+          <option value="5">18</option>
+          <option value="6">20</option>
+          <option value="7">24</option>
+        </select>
+        <span class="tooltiptext">글자 크기 조절</span>
+      </span>
+      <!-- 텍스트 색상 -->
+      <span class="tooltip">
+        <button onclick="execCmd('foreColor', document.getElementById('foreColor').value)" title="텍스트 색상">
+          <span class="material-icons">format_color_text</span>
+        </button>
+        <span class="tooltiptext">텍스트 색상</span>
+      </span>
+      <input type="color" id="foreColor" value="#000000" title="텍스트 색상 선택">
+      <!-- 하이라이트 색상 -->
+      <span class="tooltip">
+        <button onclick="execCmd('hiliteColor', document.getElementById('hiliteColor').value)" title="하이라이트 색상">
+          <span class="material-icons">format_color_fill</span>
+        </button>
+        <span class="tooltiptext">하이라이트 색상</span>
+      </span>
+      <input type="color" id="hiliteColor" value="#FFFF00" title="하이라이트 색상 선택">
+      <!-- 정렬 -->
+      <span class="tooltip">
+        <button onclick="execCmd('justifyLeft')" title="좌측 정렬">
+          <span class="material-icons">format_align_left</span>
+        </button>
+        <span class="tooltiptext">좌측 정렬</span>
+      </span>
+      <span class="tooltip">
+        <button onclick="execCmd('justifyCenter')" title="중앙 정렬">
+          <span class="material-icons">format_align_center</span>
+        </button>
+        <span class="tooltiptext">중앙 정렬</span>
+      </span>
+      <span class="tooltip">
+        <button onclick="execCmd('justifyRight')" title="우측 정렬">
+          <span class="material-icons">format_align_right</span>
+        </button>
+        <span class="tooltiptext">우측 정렬</span>
+      </span>
+      <span class="tooltip">
+        <button onclick="execCmd('justifyFull')" title="양쪽 정렬">
+          <span class="material-icons">format_align_justify</span>
+        </button>
+        <span class="tooltiptext">양쪽 정렬</span>
+      </span>
+      <!-- 리스트 -->
+      <span class="tooltip">
+        <button onclick="execCmd('insertOrderedList')" title="번호 리스트">
+          <span class="material-icons">format_list_numbered</span>
+        </button>
+        <span class="tooltiptext">번호 리스트</span>
+      </span>
+      <span class="tooltip">
+        <button onclick="execCmd('insertUnorderedList')" title="글머리표 리스트">
+          <span class="material-icons">format_list_bulleted</span>
+        </button>
+        <span class="tooltiptext">글머리표 리스트</span>
+      </span>
+      <!-- 들여쓰기/내어쓰기 -->
+      <span class="tooltip">
+        <button onclick="execCmd('outdent')" title="내어쓰기">
+          <span class="material-icons">format_indent_decrease</span>
+        </button>
+        <span class="tooltiptext">내어쓰기</span>
+      </span>
+      <span class="tooltip">
+        <button onclick="execCmd('indent')" title="들여쓰기">
+          <span class="material-icons">format_indent_increase</span>
+        </button>
+        <span class="tooltiptext">들여쓰기</span>
+      </span>
+      <!-- 링크 삽입 -->
+      <span class="tooltip">
+        <button onclick="createLink()" title="링크 삽입">
+          <span class="material-icons">insert_link</span>
+        </button>
+        <span class="tooltiptext">링크 삽입</span>
+      </span>
+      <!-- 형식 제거 -->
+      <span class="tooltip">
+        <button onclick="execCmd('removeFormat')" title="형식 지우기">
+          <span class="material-icons">format_clear</span>
+        </button>
+        <span class="tooltiptext">형식 지우기</span>
+      </span>
+    </div>
+    
+    <!-- 편집 영역 -->
+    <div id="sharedContent" contenteditable="true">
+      <p>
+        여기에 내용을 입력하세요.<br>
+        Microsoft Word의 주요 기능들이 아이콘과 고급스러운 디자인으로 지원됩니다.
+      </p>
+    </div>
+    
+    <!-- 오프라인 공유 영역 -->
+    <div id="offlineSharing">
+      <button id="generateCodeBtn">공유 코드 생성</button>
+      <button id="applyCodeBtn">공유 코드 적용</button>
     </div>
   </div>
   
-  <div id="toolbar">
-    <button id="convertBtn" class="md3-button">텍스트 버튼 적용</button>
-    <button class="format-btn" onclick="execCmd('bold')">
-      <span class="material-icons">format_bold</span>
-    </button>
-    <button class="format-btn" onclick="execCmd('italic')">
-      <span class="material-icons">format_italic</span>
-    </button>
-    <button class="format-btn" onclick="execCmd('underline')">
-      <span class="material-icons">format_underlined</span>
-    </button>
-    <button class="format-btn" onclick="execCmd('strikeThrough')">
-      <span class="material-icons">strikethrough_s</span>
-    </button>
-    <button class="format-btn" onclick="execCmd('justifyLeft')">
-      <span class="material-icons">format_align_left</span>
-    </button>
-    <button class="format-btn" onclick="execCmd('justifyCenter')">
-      <span class="material-icons">format_align_center</span>
-    </button>
-    <button class="format-btn" onclick="execCmd('justifyRight')">
-      <span class="material-icons">format_align_right</span>
-    </button>
-  </div>
-  
   <script>
-    let activeTab = "1";
-    const notepad = document.getElementById('notepad');
-    
-    notepad.addEventListener('input', function() {
-      localStorage.setItem("notepad-content-" + activeTab, notepad.innerHTML);
-    });
-    
-    window.addEventListener('DOMContentLoaded', function() {
-      const storedContent = localStorage.getItem("notepad-content-" + activeTab);
-      if (storedContent !== null) {
-        notepad.innerHTML = storedContent;
-      }
-    });
-    
-    function execCmd(command) {
-      document.execCommand(command, false, null);
+    // execCommand 호출 함수
+    function execCmd(command, value = null) {
+      document.execCommand(command, false, value);
     }
     
-    document.getElementById('convertBtn').addEventListener('click', function () {
+    function createLink() {
+      var url = prompt("링크 URL을 입력하세요:", "http://");
+      if (url) {
+        execCmd("createLink", url);
+      }
+    }
+    
+    // 텍스트 버튼 변환 – 선택 텍스트를 버튼으로 변환
+    function convertSelectedText() {
       const selection = window.getSelection();
       if (selection.rangeCount > 0) {
         const range = selection.getRangeAt(0);
-        // trim() 선택 영역의 앞뒤 공백 제거
         const selectedText = range.toString().trim();
         if (!selectedText) return;
         const fragment = document.createDocumentFragment();
@@ -290,55 +385,26 @@
           if (!trimmedLine) return;
           const btn = document.createElement('button');
           btn.className = 'highlight-btn';
-          btn.textContent = trimmedLine;
+          // innerHTML로 서식 포함된 상태 유지
+          btn.innerHTML = trimmedLine;
           btn.dataset.explanationId = Math.random().toString(36).substr(2, 9);
           fragment.appendChild(btn);
           fragment.appendChild(document.createElement('br'));
-          btn.addEventListener('click', toggleExplanation);
+          btn.addEventListener('click', function(event) {
+            event.stopPropagation();
+            toggleExplanation(btn);
+          });
         });
         range.deleteContents();
         range.insertNode(fragment);
         selection.removeAllRanges();
       }
-    });
+    }
     
-    const tabBar = document.getElementById('tabBar');
-    tabBar.addEventListener('click', function(e) {
-      const tab = e.target.closest('.tab-btn');
-      if (tab && !tab.classList.contains('new-tab')) {
-        localStorage.setItem("notepad-content-" + activeTab, notepad.innerHTML);
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        tab.classList.add('active');
-        activeTab = tab.dataset.tab || "1";
-        const content = localStorage.getItem("notepad-content-" + activeTab);
-        notepad.innerHTML = content !== null ? content : "";
-        notepad.focus();
-      }
-    });
+    // 툴바의 텍스트 변환 아이콘과 연결 (HTML onclick="convertSelectedText()" 적용됨)
     
-    document.getElementById('newTabBtn').addEventListener('click', function() {
-      const newCount = document.querySelectorAll('.tab-btn').length;
-      const newTab = document.createElement('button');
-      newTab.className = 'tab-btn';
-      newTab.textContent = `Document ${newCount}`;
-      newTab.dataset.tab = newCount;
-      tabBar.insertBefore(newTab, this);
-      localStorage.setItem("notepad-content-" + newCount, "");
-    });
-    
-    tabBar.addEventListener('dblclick', function(e) {
-      const btn = e.target.closest('.tab-btn');
-      if (btn && !btn.classList.contains('new-tab')) {
-        const newName = prompt("새 탭 이름을 입력하세요", btn.textContent);
-        if (newName && newName.trim() !== "") {
-          btn.textContent = newName.trim();
-        }
-      }
-    });
-    
-    function toggleExplanation(event) {
-      event.stopPropagation();
-      const btn = event.target.closest("button");
+    // 설명 상자 토글 함수
+    function toggleExplanation(btn) {
       const id = btn.dataset.explanationId;
       let explanationBox = document.getElementById(id);
       if (explanationBox) {
@@ -349,12 +415,12 @@
         explanationBox.id = id;
         const inputField = document.createElement("input");
         inputField.type = "text";
-        inputField.placeholder = "여기에 설명을 입력하세요...";
+        inputField.placeholder = "설명을 입력하세요...";
         inputField.addEventListener("keydown", function(e) {
-          if(e.key === "Enter") {
+          if (e.key === "Enter") {
             e.preventDefault();
-            const text = inputField.value;
-            if (!text.trim()){
+            const text = this.value.trim();
+            if (!text) {
               alert("설명을 입력해주세요.");
               return;
             }
@@ -365,6 +431,39 @@
         btn.parentNode.insertBefore(explanationBox, btn.nextSibling);
       }
     }
+    
+    // 고아 설명 상자 자동 정리
+    function cleanupOrphanExplanationBoxes() {
+      const explanationBoxes = document.querySelectorAll('.explanation-box');
+      explanationBoxes.forEach(box => {
+        const id = box.id;
+        if (!document.querySelector("button[data-explanation-id='" + id + "']")) {
+          box.remove();
+        }
+      });
+    }
+    const observer = new MutationObserver(() => {
+      cleanupOrphanExplanationBoxes();
+    });
+    observer.observe(document.getElementById("editorContainer"), { childList: true, subtree: true });
+    
+    // 오프라인 공유 기능: LZ‑String 압축/해제
+    document.getElementById("generateCodeBtn").addEventListener("click", function(){
+      var content = document.getElementById("sharedContent").innerHTML;
+      var compressed = LZString.compressToEncodedURIComponent(content);
+      prompt("아래 코드를 복사하세요:", compressed);
+    });
+    document.getElementById("applyCodeBtn").addEventListener("click", function(){
+      var code = prompt("복사한 코드를 붙여넣으세요:");
+      if (code) {
+        try {
+          var decoded = LZString.decompressFromEncodedURIComponent(code);
+          document.getElementById("sharedContent").innerHTML = decoded;
+        } catch (e) {
+          alert("유효한 코드가 아닙니다.");
+        }
+      }
+    });
   </script>
 </body>
 </html>
