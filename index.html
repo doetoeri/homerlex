@@ -14,23 +14,23 @@
   
   <style>
     :root {
-      --primary: #0A84FF;      /* 선명한 파란색 (2025 트렌디) */
-      --on-primary: #000;      
+      --primary: #0A84FF;
+      --on-primary: #000;
       --surface: #fff;
       --on-surface: #333;
       --background: #F7F8FA;
-      --corner-radius: 40px;    /* 더 둥근 모서리 */
+      --corner-radius: 40px;  /* 더 둥근 모서리 */
       --font-family: 'Noto Sans', sans-serif;
       --serif-font: 'Instrument Serif', serif;
       --font-size: 16px;
       --button-padding: 0.5rem 1rem;
     }
     
-    /* 헤더: 좌측 상단, 배경/테두리/그림자 제거, 간결한 디자인 */
+    /* 헤더: 좌측 상단에 로고와 사이트 제목 */
     header {
       display: flex;
       align-items: center;
-      padding: 16px;
+      padding: 16px 24px;
       margin-bottom: 20px;
     }
     .logo {
@@ -178,18 +178,19 @@
       transform: scale(0.97);
     }
     
-    /* 호버링 설명 상자 */
+    /* 호버링 설명 상자: fadeInBounce 애니메이션 적용 */
     .explanation-box {
       background: var(--surface);
       border: 1px solid #ddd;
       border-radius: var(--corner-radius);
       padding: 12px;
       margin-top: 8px;
-      animation: fadeIn 0.3s ease;
+      animation: fadeInBounce 0.5s ease;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes fadeInBounce {
+      0% { opacity: 0; transform: translateY(10px); }
+      50% { opacity: 0.5; transform: translateY(-3px); }
+      100% { opacity: 1; transform: translateY(0); }
     }
     .explanation-box input {
       width: 100%;
@@ -199,6 +200,16 @@
       font-size: var(--font-size);
     }
     
+    /* bounce 효과 (클릭 시 약간 위아래로 움직임) */
+    .bounce {
+      animation: bounce 0.5s ease;
+    }
+    @keyframes bounce {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+      100% { transform: translateY(0); }
+    }
+    
     @media screen and (max-width: 600px) {
       #notepadContainer { width: 100%; padding: 16px; }
       #toolbar { flex-direction: column; gap: 8px; }
@@ -206,7 +217,7 @@
   </style>
 </head>
 <body>
-  <!-- 헤더: 좌측 상단, 아이콘 및 사이트 제목 -->
+  <!-- 헤더: 좌측 상단에 로고와 사이트 이름 -->
   <header>
     <img src="logo.png" alt="Homerlex Logo" class="logo">
     <div class="site-title">Homerlex</div>
@@ -237,7 +248,7 @@
     </div>
   </div>
   
-  <!-- 하단 툴바 영역 (서식 버튼들) -->
+  <!-- 하단 툴바 영역 -->
   <div id="toolbar">
     <button id="convertBtn">텍스트 버튼 적용</button>
     <button class="format-btn" onclick="execCmd('bold')" title="굵게">
@@ -361,7 +372,15 @@
       document.execCommand(command, false, null);
     }
     
-    // ── 텍스트 버튼 변환 토글 ──
+    // ── 클릭 시 bounce 효과 부여 함수 ──
+    function addBounceEffect(el) {
+      el.classList.add("bounce");
+      el.addEventListener("animationend", function() {
+        el.classList.remove("bounce");
+      }, { once: true });
+    }
+    
+    // ── 텍스트 버튼 변환 토글 함수 ──
     function convertSelectedText() {
       const sel = window.getSelection();
       if (sel.rangeCount === 0) return;
@@ -369,7 +388,7 @@
       const selectedStr = range.toString();
       if (selectedStr.trim() === "") return;
       
-      // 만약 선택 영역에 이미 highlight 버튼이 있다면 원복 (토글)
+      // 선택 영역 내에 이미 하이라이트 버튼이 있는 경우 토글 처리
       let foundButton = false;
       function searchForButton(node) {
         if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains("highlight-btn")) {
@@ -381,7 +400,7 @@
       }
       searchForButton(range.cloneContents());
       if (foundButton) {
-        // 영역 내의 모든 highlight-btn을 text 노드로 변환
+        // 영역 내부의 highlight 버튼을 일반 텍스트로 복원
         const frag = document.createDocumentFragment();
         range.cloneContents().childNodes.forEach(node => {
           if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains("highlight-btn")) {
@@ -409,10 +428,13 @@
           btn.dataset.explanationId = Math.random().toString(36).substr(2,9);
           frag.appendChild(btn);
           frag.appendChild(document.createElement("br"));
+          // 클릭 시 호버 설명 토글 및 bounce 효과
           btn.addEventListener("click", function(e) {
             e.stopPropagation();
+            addBounceEffect(btn);
             toggleExplanation(e);
           });
+          addBounceEffect(btn);
         }
       });
       range.deleteContents();
@@ -420,16 +442,17 @@
       sel.removeAllRanges();
       document.getElementById("notepad").dispatchEvent(new Event("input"));
     }
+    
     document.getElementById("convertBtn").addEventListener("click", convertSelectedText);
     
-    // ── 호버 설명 토글 ──
+    // ── 호버 설명 토글 함수 ──
     function toggleExplanation(e) {
       e.stopPropagation();
       const btn = e.currentTarget;
       const id = btn.dataset.explanationId;
       let box = document.getElementById(id);
       if (box) {
-        box.style.display = (box.style.display === "none" || box.style.display === "") ? "block" : "none";
+        box.style.display = (box.style.display === "" || box.style.display === "block") ? "none" : "block";
       } else {
         box = document.createElement("div");
         box.className = "explanation-box";
@@ -438,7 +461,7 @@
         inputField.type = "text";
         inputField.placeholder = "설명을 입력하세요...";
         inputField.addEventListener("keydown", function(ev) {
-          if(ev.key === "Enter") {
+          if (ev.key === "Enter") {
             ev.preventDefault();
             const val = inputField.value.trim();
             if (!val) { alert("설명을 입력해주세요."); return; }
@@ -447,6 +470,7 @@
         });
         box.appendChild(inputField);
         btn.parentNode.insertBefore(box, btn.nextSibling);
+        addBounceEffect(box);
       }
     }
     
