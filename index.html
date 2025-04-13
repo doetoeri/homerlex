@@ -5,39 +5,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Homerlex – Word Editor</title>
   <link rel="icon" type="image/png" href="icon.png">
-  <!-- Google Fonts: Noto Sans (기본 서체) -->
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Google Fonts: Noto Sans (본문), Instrument Serif (태그라인) -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&family=Instrument+Serif&display=swap" rel="stylesheet">
   <!-- Material Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <!-- LZ‑String (문자 코드 공유 기능) -->
+  <!-- LZ‑String (자연어 기반 공유 코드 기능) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
   <style>
     :root {
-      --primary: #2196F3; /* 밝은 파랑 */
-      --on-primary: #ffffff;
+      --primary: #2196F3;             /* 기본 배경색 (버튼 등) */
+      --on-primary: #000000;            /* 모든 텍스트 및 아이콘은 검정색 */
       --surface: #ffffff;
       --on-surface: #323130;
       --background: #F1F3F4;
-      --corner-radius: 20px; /* 둥근 정도 증가 */
+      --corner-radius: 20px;
       --font-family: 'Noto Sans', sans-serif;
+      --serif-font: 'Instrument Serif', serif;
       --font-size: 16px;
       --button-padding: 0.5rem 0.75rem;
-      --toolbar-height: 48px;
+      --toolbar-height: 56px;
     }
     body {
       background-color: var(--background);
       font-family: var(--font-family);
       margin: 20px;
       color: var(--on-surface);
+    }
+    h1 {
       text-align: center;
+      color: var(--on-surface);
     }
     header {
+      text-align: center;
       margin-bottom: 20px;
     }
     .logo {
       max-width: 100px;
     }
     .tagline {
+      font-family: var(--serif-font);
       font-size: 22px;
       color: var(--primary);
       margin-top: 5px;
@@ -51,10 +57,10 @@
       background-color: var(--surface);
       border: 1px solid #ccc;
       border-radius: var(--corner-radius);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
       overflow: hidden;
     }
-    /* 툴바: 가로 그라데이션 + 하단 밝은 오버레이 */
+    /* 툴바: 가로 그라데이션과 하단 어두운 오버레이 */
     #toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -63,12 +69,45 @@
       padding: 4px;
       background: 
         linear-gradient(to bottom, transparent, rgba(0,0,0,0.2)),
-        linear-gradient(to right, #64B5F6, var(--primary));
+        var(--primary);
       background-blend-mode: multiply;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
       color: var(--on-primary);
     }
-    /* 툴팁 */
+    /* 모든 툴바 컨트롤—버튼, 선택 상자, 컬러 인풋—아이콘 기반, 그라데이션 제거 */
+    #toolbar button,
+    #toolbar select,
+    #toolbar input[type="color"] {
+      background: var(--primary);
+      border: none;
+      color: var(--on-primary);
+      padding: var(--button-padding);
+      margin: 2px;
+      cursor: pointer;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      border-radius: var(--corner-radius);
+    }
+    #toolbar select {
+      font-size: 14px;
+      background-color: #fff;
+      color: var(--on-primary);
+      border-radius: var(--corner-radius);
+      padding: 2px 4px;
+    }
+    #toolbar input[type="color"] {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border: none;
+    }
+    #toolbar button:hover,
+    #toolbar select:hover,
+    #toolbar input[type="color"]:hover {
+      opacity: 0.85;
+    }
+    /* 툴팁 스타일 */
     .tooltip {
       position: relative;
       display: inline-block;
@@ -76,10 +115,10 @@
     .tooltip .tooltiptext {
       visibility: hidden;
       width: auto;
-      background-color: rgba(51, 51, 51, 0.85);
+      background-color: rgba(51,51,51,0.85);
       color: #fff;
       text-align: center;
-      border-radius: calc(var(--corner-radius) / 2);
+      border-radius: calc(var(--corner-radius)/2);
       padding: 4px 6px;
       position: absolute;
       z-index: 1;
@@ -95,37 +134,6 @@
       visibility: visible;
       opacity: 1;
     }
-    #toolbar button,
-    #toolbar select,
-    #toolbar input[type="color"] {
-      background: transparent;
-      border: none;
-      color: var(--on-primary);
-      padding: var(--button-padding);
-      margin: 2px;
-      cursor: pointer;
-      font-size: 24px;
-      display: flex;
-      align-items: center;
-    }
-    #toolbar select {
-      font-size: 14px;
-      background-color: var(--on-primary);
-      color: var(--primary);
-      border-radius: var(--corner-radius);
-      padding: 2px 4px;
-    }
-    #toolbar input[type="color"] {
-      width: 32px;
-      height: 32px;
-      padding: 0;
-      border: none;
-    }
-    #toolbar button:hover,
-    #toolbar select:hover,
-    #toolbar input[type="color"]:hover {
-      opacity: 0.85;
-    }
     /* 편집 영역 */
     #sharedContent {
       min-height: 300px;
@@ -133,28 +141,28 @@
       text-align: left;
       outline: none;
       overflow: auto;
+      color: #000000;
     }
     /* 오프라인 공유 영역 */
     #offlineSharing {
       text-align: center;
       margin: 10px 0;
-      padding-bottom: 10px;
+      padding: 10px;
       background-color: var(--surface);
     }
     #offlineSharing button {
-      background-color: var(--primary);
-      color: var(--on-primary);
+      background: var(--primary);
       border: none;
       padding: var(--button-padding);
       margin: 5px;
       border-radius: var(--corner-radius);
       cursor: pointer;
       font-size: 16px;
+      color: var(--on-primary);
     }
     /* 텍스트 버튼 변환 결과 (하이라이트 버튼) */
     .highlight-btn {
-      background-color: var(--primary);
-      color: var(--on-primary);
+      background: var(--primary);
       border: none;
       padding: var(--button-padding);
       border-radius: var(--corner-radius);
@@ -163,11 +171,12 @@
       cursor: pointer;
       margin: 2px 0;
       transition: transform 0.1s ease;
+      color: var(--on-primary);
     }
     .highlight-btn:active {
       transform: scale(0.97);
     }
-    /* 설명 상자 (텍스트 버튼과 연결) */
+    /* 설명 상자 (텍스트 버튼과 연결된 호버링 영역) */
     .explanation-box {
       background-color: var(--surface);
       border: 1px solid #ddd;
@@ -175,7 +184,6 @@
       padding: 8px;
       margin-top: 4px;
     }
-    /* 반응형 */
     @media screen and (max-width: 600px) {
       #editorContainer { width: 100%; }
       #toolbar { flex-direction: column; }
@@ -189,9 +197,9 @@
   </header>
   
   <div id="editorContainer">
-    <!-- 툴바 -->
+    <!-- 툴바 영역 (모든 버튼은 아이콘과 툴팁 포함) -->
     <div id="toolbar">
-      <!-- 텍스트 버튼 변환 (툴팁 포함) -->
+      <!-- 텍스트 버튼 변환 (아이콘: text_fields) -->
       <span class="tooltip">
         <button onclick="convertSelectedText()" title="텍스트 버튼 변환">
           <span class="material-icons">text_fields</span>
@@ -211,7 +219,7 @@
         </button>
         <span class="tooltiptext">다시 실행</span>
       </span>
-      <!-- 서식 -->
+      <!-- 서식: Bold, Italic, Underline, StrikeThrough -->
       <span class="tooltip">
         <button onclick="execCmd('bold')" title="Bold">
           <span class="material-icons">format_bold</span>
@@ -315,7 +323,7 @@
         </button>
         <span class="tooltiptext">글머리표 리스트</span>
       </span>
-      <!-- 들여쓰기/내어쓰기 -->
+      <!-- 들여쓰기 / 내어쓰기 -->
       <span class="tooltip">
         <button onclick="execCmd('outdent')" title="내어쓰기">
           <span class="material-icons">format_indent_decrease</span>
@@ -348,7 +356,7 @@
     <div id="sharedContent" contenteditable="true">
       <p>
         여기에 내용을 입력하세요.<br>
-        Microsoft Word의 주요 기능들이 아이콘과 고급스러운 디자인으로 지원됩니다.
+        Microsoft Word의 주요 기능이 아이콘과 기본 디자인으로 지원됩니다.
       </p>
     </div>
     
@@ -385,7 +393,7 @@
           if (!trimmedLine) return;
           const btn = document.createElement('button');
           btn.className = 'highlight-btn';
-          // innerHTML로 서식 포함된 상태 유지
+          // innerHTML로 서식 보존
           btn.innerHTML = trimmedLine;
           btn.dataset.explanationId = Math.random().toString(36).substr(2, 9);
           fragment.appendChild(btn);
@@ -401,9 +409,7 @@
       }
     }
     
-    // 툴바의 텍스트 변환 아이콘과 연결 (HTML onclick="convertSelectedText()" 적용됨)
-    
-    // 설명 상자 토글 함수
+    // 설명 상자 토글 함수: 버튼과 연결된 설명 입력 영역 처리
     function toggleExplanation(btn) {
       const id = btn.dataset.explanationId;
       let explanationBox = document.getElementById(id);
@@ -432,38 +438,87 @@
       }
     }
     
-    // 고아 설명 상자 자동 정리
-    function cleanupOrphanExplanationBoxes() {
-      const explanationBoxes = document.querySelectorAll('.explanation-box');
-      explanationBoxes.forEach(box => {
-        const id = box.id;
-        if (!document.querySelector("button[data-explanation-id='" + id + "']")) {
-          box.remove();
-        }
-      });
+    // 자연어 기반 공유 코드 기능
+    const baseAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+    const dictionary = [
+      "alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel",
+      "india", "juliet", "kilo", "lima", "mike", "november", "oscar", "papa",
+      "quebec", "romeo", "sierra", "tango", "uniform", "victor", "whiskey", "xray",
+      "yankee", "zulu", "amber", "bronze", "crimson", "dune", "ember", "flint",
+      "gale", "harbor", "iris", "jade", "krypton", "lunar", "mist", "noble",
+      "onyx", "pearl", "quartz", "raven", "sable", "titan", "umber", "vivid",
+      "wisp", "xenon", "yield", "zephyr", "aqua", "breeze", "crest", "dawn",
+      "eclipse", "frost", "glade", "harp", "ivory", "jet", "knight", "lance"
+    ];
+    if (dictionary.length !== 64) {
+      alert("Dictionary must contain exactly 64 words.");
     }
-    const observer = new MutationObserver(() => {
-      cleanupOrphanExplanationBoxes();
-    });
-    observer.observe(document.getElementById("editorContainer"), { childList: true, subtree: true });
     
-    // 오프라인 공유 기능: LZ‑String 압축/해제
+    function naturalEncode(content) {
+      const compressed = LZString.compressToEncodedURIComponent(content);
+      let naturalCodeArray = [];
+      for (let i = 0; i < compressed.length; i++) {
+        const ch = compressed.charAt(i);
+        const idx = baseAlphabet.indexOf(ch);
+        if (idx === -1) {
+          alert("압축 문자열에 알 수 없는 문자가 포함되었습니다: " + ch);
+          return null;
+        }
+        naturalCodeArray.push(dictionary[idx]);
+      }
+      return naturalCodeArray.join(" ");
+    }
+    
+    function naturalDecode(naturalCode) {
+      const words = naturalCode.trim().split(/\s+/);
+      let compressed = "";
+      for (let i = 0; i < words.length; i++) {
+        const word = words[i];
+        const idx = dictionary.indexOf(word);
+        if (idx === -1) {
+          alert("코드에 잘못된 단어가 포함되었습니다: " + word);
+          return null;
+        }
+        compressed += baseAlphabet.charAt(idx);
+      }
+      return LZString.decompressFromEncodedURIComponent(compressed);
+    }
+    
     document.getElementById("generateCodeBtn").addEventListener("click", function(){
       var content = document.getElementById("sharedContent").innerHTML;
-      var compressed = LZString.compressToEncodedURIComponent(content);
-      prompt("아래 코드를 복사하세요:", compressed);
+      var naturalCode = naturalEncode(content);
+      if (naturalCode !== null) {
+        prompt("아래 자연어 코드를 복사하세요:", naturalCode);
+      }
     });
+    
     document.getElementById("applyCodeBtn").addEventListener("click", function(){
-      var code = prompt("복사한 코드를 붙여넣으세요:");
+      var code = prompt("자연어 코드를 붙여넣으세요:");
       if (code) {
         try {
-          var decoded = LZString.decompressFromEncodedURIComponent(code);
+          var decoded = naturalDecode(code);
           document.getElementById("sharedContent").innerHTML = decoded;
         } catch (e) {
           alert("유효한 코드가 아닙니다.");
         }
       }
     });
+    
+    // 고아 설명 상자 자동 정리 (텍스트 버튼과 연결된 설명 상자가 버튼이 사라지면 제거)
+    function cleanupOrphanExplanationBoxes() {
+      const boxes = document.querySelectorAll('.explanation-box');
+      boxes.forEach(box => {
+        const id = box.id;
+        if (!document.querySelector("button[data-explanation-id='" + id + "']")) {
+          box.remove();
+        }
+      });
+    }
+    const container = document.getElementById("editorContainer");
+    const observer = new MutationObserver(() => {
+      cleanupOrphanExplanationBoxes();
+    });
+    observer.observe(container, { childList: true, subtree: true });
   </script>
 </body>
 </html>
