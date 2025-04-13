@@ -9,6 +9,7 @@
   
   <!-- Google Fonts: Noto Sans & Instrument Serif -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&family=Instrument+Serif&display=swap" rel="stylesheet">
+  
   <!-- Material Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   
@@ -25,7 +26,6 @@
       --font-size: 16px;
       --button-padding: 0.5rem 0.75rem;
     }
-    
     body {
       background-color: var(--background);
       font-family: var(--font-family);
@@ -44,7 +44,6 @@
       margin-top: 5px;
       font-weight: bold;
     }
-    
     /* 탭바 영역 */
     #tabBar {
       display: flex;
@@ -74,6 +73,10 @@
       border: none;
       padding: 8px;
     }
+    /* 탭 삭제 (더블클릭 시) */
+    .tab-btn.deletable:hover {
+      background-color: #ffdddd;
+    }
     
     /* 노트패드 영역 */
     #notepadContainer {
@@ -98,7 +101,7 @@
       line-height: 1.5;
     }
     
-    /* 하단 툴바 영역 (서식 버튼 등) */
+    /* 하단 툴바 영역 */
     #toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -202,7 +205,7 @@
     </div>
   </div>
   
-  <!-- 하단 툴바 영역 (서식 버튼들) -->
+  <!-- 하단 툴바 영역 (서식 버튼) -->
   <div id="toolbar">
     <button id="convertBtn">텍스트 버튼 적용</button>
     <button class="format-btn" onclick="execCmd('bold')" title="굵게">
@@ -229,40 +232,69 @@
   </div>
   
   <script>
-    /* ── 탭 및 로컬 저장 기능 ── */
+    // ── 탭 및 로컬 저장 기능 ──
     let activeTab = "1";
     
     const tabBar = document.getElementById('tabBar');
     tabBar.addEventListener('click', function(e) {
+      // 새 탭 버튼은 별도로 처리
       const tab = e.target.closest('.tab-btn');
-      if (!tab || tab.classList.contains('new-tab')) return;
-      // 저장 후 전환
+      if (!tab) return;
+      if (tab.classList.contains('new-tab')) return;
+      
+      // 만약 더블클릭으로 삭제요청 상태라면 삭제 처리 (탭이 "deletable" 클래스가 있으면)
+      if (tab.classList.contains('deletable')) {
+        if (confirm("이 탭을 삭제하시겠습니까?")) {
+          // 탭 삭제: 해당 탭과 데이터 삭제
+          const dt = tab.dataset.tab;
+          tab.remove();
+          localStorage.removeItem("notepad-content-" + dt);
+          // 활성 탭이 삭제되었을 경우, 첫 번째 탭을 활성화
+          const tabs = document.querySelectorAll('.tab-btn:not(.new-tab)');
+          if (tabs.length > 0) {
+            tabs[0].classList.add('active');
+            activeTab = tabs[0].dataset.tab;
+            const stored = localStorage.getItem("notepad-content-" + activeTab);
+            document.getElementById("notepad").innerHTML = stored !== null ? stored : "<p>새 문서를 작성하세요.</p>";
+          } else {
+            // 탭이 없다면 새 탭 생성
+            activeTab = "1";
+            location.reload();
+          }
+        } else {
+          tab.classList.remove("deletable");
+        }
+        return;
+      }
+      
+      // 일반 탭 클릭: 저장 후 전환
       localStorage.setItem("notepad-content-" + activeTab, document.getElementById("notepad").innerHTML);
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       tab.classList.add('active');
       activeTab = tab.dataset.tab || "1";
       const stored = localStorage.getItem("notepad-content-" + activeTab);
-      document.getElementById("notepad").innerHTML = stored !== null ? stored : "<p>새 문서를 작성하세요.</p>";
+      document.getElementById("notepad").innerHTML = (stored !== null) ? stored : "<p>새 문서를 작성하세요.</p>";
     });
     
+    // 탭 삭제: 더블클릭 시 탭이 빨간색으로 변해 삭제 가능 상태
+    tabBar.addEventListener('dblclick', function(e) {
+      const tab = e.target.closest('.tab-btn');
+      if (tab && !tab.classList.contains('new-tab')) {
+        // 표시용으로 deletable 클래스를 토글(빨간색 배경)
+        tab.classList.toggle('deletable');
+        // (삭제는 탭 클릭 시 confirm 후 처리)
+      }
+    });
+    
+    // 새 탭 생성
     document.getElementById('newTabBtn').addEventListener('click', function() {
-      const tabCount = document.querySelectorAll('.tab-btn').length;
+      const tabCount = document.querySelectorAll('.tab-btn:not(.new-tab)').length + 1;
       const newTab = document.createElement('button');
       newTab.className = 'tab-btn';
       newTab.dataset.tab = tabCount;
       newTab.textContent = `Document ${tabCount}`;
       tabBar.insertBefore(newTab, this);
       localStorage.setItem("notepad-content-" + tabCount, "");
-    });
-    
-    tabBar.addEventListener('dblclick', function(e) {
-      const btn = e.target.closest('.tab-btn');
-      if (btn && !btn.classList.contains('new-tab')) {
-        const newName = prompt("새 탭 이름을 입력하세요", btn.textContent);
-        if (newName && newName.trim() !== "") {
-          btn.textContent = newName.trim();
-        }
-      }
     });
     
     window.addEventListener('DOMContentLoaded', function() {
@@ -276,71 +308,77 @@
       localStorage.setItem("notepad-content-" + activeTab, document.getElementById("notepad").innerHTML);
     });
     
-    /* ── 서식 관련 함수 ── */
+    // ── 서식 관련 함수 ──
     function execCmd(command) {
       document.execCommand(command, false, null);
     }
     
-    /* ── 텍스트 버튼 변환 기능 ── */
+    // ── 텍스트 버튼 변환 토글 기능 ──
     function convertSelectedText() {
       const selection = window.getSelection();
       if (selection.rangeCount === 0) return;
       const range = selection.getRangeAt(0);
-      const selectedStr = range.toString().trim();
-      if (!selectedStr) return;
       
-      // 검사: 선택된 영역이 모두 버튼 안에 속한다면 토글(제거) 처리
-      let commonAncestor = range.commonAncestorContainer;
-      if (commonAncestor.nodeType !== 1){ commonAncestor = commonAncestor.parentNode; }
-      if (commonAncestor.classList && commonAncestor.classList.contains("highlight-btn")) {
-        // 이미 버튼이라면, 원본 텍스트 노드로 대체함
-        const plainText = document.createTextNode(commonAncestor.textContent);
-        commonAncestor.parentNode.replaceChild(plainText, commonAncestor);
-        selection.removeAllRanges();
-        // 저장 업데이트
+      // 먼저, 선택 영역과 겹치는 highlight 버튼 요소들을 모두 찾고 제거
+      const highlightButtons = document.querySelectorAll('.highlight-btn');
+      let removed = false;
+      highlightButtons.forEach(btn => {
+        const btnRange = document.createRange();
+        btnRange.selectNodeContents(btn);
+        // 범위가 겹치면 삭제
+        if (range.compareBoundaryPoints(Range.END_TO_START, btnRange) < 0 &&
+            range.compareBoundaryPoints(Range.START_TO_END, btnRange) > 0) {
+          // 전체 버튼을 취급: 버튼을 평문 텍스트 노드로 대체
+          const plainText = document.createTextNode(btn.textContent);
+          btn.parentNode.replaceChild(plainText, btn);
+          removed = true;
+        }
+      });
+      if (removed) {
         document.getElementById("notepad").dispatchEvent(new Event("input"));
+        selection.removeAllRanges();
         return;
       }
       
-      // 새 버튼 생성: 선택한 텍스트를 줄 단위로 나누어 버튼으로 변환
+      // 그렇지 않으면 (변환 적용)
+      const selectedText = range.toString().trim();
+      if (!selectedText) return;
+      
       const fragment = document.createDocumentFragment();
-      selectedStr.split(/\n/).forEach(line => {
-        const trimmedLine = line.trim();
-        if (!trimmedLine) return;
+      selectedText.split(/\n/).forEach(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return;
         const btn = document.createElement("button");
         btn.className = "highlight-btn";
-        btn.textContent = trimmedLine;
+        btn.textContent = trimmed;
         btn.dataset.explanationId = Math.random().toString(36).substr(2, 9);
+        // 추가: 이미 변환된 텍스트가 있다면 다시 변환 적용을 막고 토글로 처리하도록 (위쪽에서 처리됨)
         fragment.appendChild(btn);
         fragment.appendChild(document.createElement("br"));
-        // 버튼 클릭 시 설명 토글
         btn.addEventListener("click", function(e) {
           e.stopPropagation();
           toggleExplanation(e);
         });
       });
-      // 기존 선택 영역 삭제 후 새 버튼 삽입
       range.deleteContents();
       range.insertNode(fragment);
       selection.removeAllRanges();
-      // 저장 업데이트
       document.getElementById("notepad").dispatchEvent(new Event("input"));
     }
     
     document.getElementById("convertBtn").addEventListener("click", convertSelectedText);
     
-    /* ── 호버링 설명 입력 기능 ── */
+    // ── 호버링 설명 입력 토글 ──
     function toggleExplanation(e) {
       e.stopPropagation();
-      // e.currentTarget 보장: 버튼 이벤트 리스너 안에서 사용
+      // e.currentTarget를 사용하여 정확한 버튼을 참조합니다.
       const btn = e.currentTarget;
       const id = btn.dataset.explanationId;
       let box = document.getElementById(id);
       if (box) {
-        // 토글: display 값이 "none" 또는 빈 값이면 보이고, 아니면 숨김
+        // 토글: 값이 비어있거나 "none"이면 "block"으로 변경하고, 그렇지 않으면 "none"으로 변경.
         box.style.display = (box.style.display === "none" || box.style.display === "") ? "block" : "none";
       } else {
-        // 설명 상자 생성
         box = document.createElement("div");
         box.className = "explanation-box";
         box.id = id;
@@ -350,9 +388,9 @@
         inputField.addEventListener("keydown", function(ev) {
           if (ev.key === "Enter") {
             ev.preventDefault();
-            const val = inputField.value.trim();
-            if (!val) { alert("설명을 입력해주세요."); return; }
-            box.innerHTML = "<p>" + val + "</p>";
+            const text = inputField.value.trim();
+            if (!text) { alert("설명을 입력해주세요."); return; }
+            box.innerHTML = "<p>" + text + "</p>";
           }
         });
         box.appendChild(inputField);
@@ -360,7 +398,7 @@
       }
     }
     
-    /* ── 고아 설명 상자 자동 삭제 ── */
+    // ── 고아 설명 상자 자동 삭제 ──
     function cleanupOrphanExplanationBoxes() {
       const boxes = document.querySelectorAll('.explanation-box');
       boxes.forEach(box => {
