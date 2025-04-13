@@ -5,16 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Homerlex – Word Editor (채널 동기화)</title>
   <link rel="icon" type="image/png" href="icon.png">
-  <!-- Google Fonts: Noto Sans (본문), Instrument Serif (태그라인) -->
+  <!-- Google Fonts: Noto Sans, Instrument Serif -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&family=Instrument+Serif&display=swap" rel="stylesheet">
   <!-- Material Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <!-- LZ‑String (이 예제에서는 자연어 코드는 제거됩니다) -->
+  <!-- LZ‑String (공유 코드 기능 제외) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
   <style>
     :root {
-      --primary: #2196F3;            /* 기본 배경색(버튼 등) */
-      --on-primary: #000000;           /* 모든 텍스트 및 아이콘은 검정 */
+      --primary: #2196F3;
+      --on-primary: #000000;
       --surface: #ffffff;
       --on-surface: #323130;
       --background: #F1F3F4;
@@ -76,21 +76,21 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
       overflow: hidden;
     }
-    /* 툴바: 가로 그라데이션과 하단 어두운 오버레이 */
+    /* 툴바 */
     #toolbar {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
       align-items: center;
       padding: 4px;
-      background:
+      background: 
         linear-gradient(to bottom, transparent, rgba(0,0,0,0.2)),
         var(--primary);
       background-blend-mode: multiply;
       box-shadow: 0 2px 4px rgba(0,0,0,0.15);
       color: var(--on-primary);
     }
-    /* 툴바 컨트롤 – 버튼, 선택 상자, 컬러 인풋 (아이콘 기반, 평면 배경) */
+    /* 툴바 컨트롤 – 아이콘 기반 */
     #toolbar button,
     #toolbar select,
     #toolbar input[type="color"] {
@@ -123,7 +123,7 @@
     #toolbar input[type="color"]:hover {
       opacity: 0.85;
     }
-    /* 툴팁 스타일 */
+    /* 툴팁 */
     .tooltip {
       position: relative;
       display: inline-block;
@@ -176,12 +176,12 @@
       font-size: 16px;
       color: var(--on-primary);
     }
-    /* 공유 요청 영역 (다른 사용자에게 채택 버튼을 노출) */
+    /* 공유 수락 영역 */
     #shareOffer {
       text-align: center;
       margin: 10px;
     }
-    /* 텍스트 버튼 변환 결과 (하이라이트 버튼) */
+    /* 텍스트 버튼 변환 (하이라이트 버튼) */
     .highlight-btn {
       background: var(--primary);
       border: none;
@@ -197,7 +197,7 @@
     .highlight-btn:active {
       transform: scale(0.97);
     }
-    /* 설명 상자 (텍스트 버튼과 연결된 호버링 영역) */
+    /* 설명 상자 */
     .explanation-box {
       background-color: var(--surface);
       border: 1px solid #ddd;
@@ -222,13 +222,15 @@
     <input type="text" id="channelInput" placeholder="채널 단어를 입력하세요">
     <button id="joinChannelBtn">채널 연결</button>
     <button id="leaveChannelBtn">채널 종료</button>
+    <!-- 공유 요청 버튼은 채널에 연결된 사용자에게만 보임 (호스트는 공유 버튼 클릭 시 자신의 내용을 공유) -->
     <button id="shareBtn" style="display:none;">공유</button>
     <span id="channelStatus">채널 없음</span>
   </div>
   
   <div id="editorContainer">
-    <!-- 툴바 영역 (아이콘 및 툴팁 포함) -->
+    <!-- 툴바 영역 -->
     <div id="toolbar">
+      <!-- 기본 서식 및 텍스트 버튼 변환 아이콘 -->
       <span class="tooltip">
         <button onclick="convertSelectedText()" title="텍스트 버튼 변환">
           <span class="material-icons">text_fields</span>
@@ -364,18 +366,15 @@
       </span>
     </div>
     
-    <!-- 공유 수락 영역: 채널 내에서 다른 사용자가 공유한 내용을 채택할 수 있는 버튼을 표시 -->
+    <!-- 공유 요청 영역: 다른 사용자가 공유 요청을 보았을 경우 표시 -->
     <div id="shareOffer"></div>
     
     <!-- 편집 영역 -->
     <div id="sharedContent" contenteditable="true">
-      <p>
-        여기에 내용을 입력하세요.<br>
-        Microsoft Word의 주요 기능이 아이콘과 기본 디자인으로 지원됩니다.
-      </p>
+      <p>여기에 내용을 입력하세요.<br>Microsoft Word의 주요 기능이 아이콘과 기본 디자인으로 지원됩니다.</p>
     </div>
     
-    <!-- 오프라인 공유 영역 -->
+    <!-- 오프라인 공유 영역 (여기선 사용되지 않는 버튼으로 예시) -->
     <div id="offlineSharing">
       <button id="generateCodeBtn">공유 코드 생성</button>
       <button id="applyCodeBtn">공유 코드 적용</button>
@@ -384,22 +383,20 @@
   
   <script>
     // --- 채널 동기화 관련 (GitHub 파일 기반 예제) ---
-    // 리포지토리: doetoeri/homerlex
-    // 채널 파일은 예를 들어, 리포지토리 루트의 channel.json 파일을 사용합니다.
+    // 채널 데이터는 리포지토리의 channel.json 파일을 이용합니다.
     const channelFileURL = "https://raw.githubusercontent.com/doetoeri/homerlex/main/channel.json";
     let currentChannel = null;
     let channelPollingInterval = null;
     const channelStatusElem = document.getElementById("channelStatus");
     
-    // 채널에 접속하면 파일을 폴링하여 데이터를 업데이트
     function joinChannel(){
       const channelWord = document.getElementById('channelInput').value.trim();
       if(!channelWord){ alert("채널 단어를 입력해주세요."); return; }
       currentChannel = channelWord;
       channelStatusElem.innerText = "채널: " + currentChannel;
-      // 실제 구현 시, 채널 파일 URL: "https://raw.githubusercontent.com/doetoeri/homerlex/main/channels/" + currentChannel + ".json"
+      // 실제 구현: 채널별 JSON 파일 경로 사용해서 폴링 (예: channels/채널명.json)
       channelPollingInterval = setInterval(fetchChannelData, 5000);
-      // 호스트인 경우, 공유 버튼을 보이게 함 (실제 쓰기는 백엔드로 처리해야 함)
+      // 채널에 들어가면 공유 버튼 표시 (호스트인 경우)
       document.getElementById("shareBtn").style.display = "inline-block";
     }
     
@@ -414,16 +411,16 @@
       if(!currentChannel) return;
       fetch(channelFileURL)
         .then(response => {
-          if(!response.ok) { throw new Error("채널 데이터를 가져올 수 없습니다."); }
+          if(!response.ok){ throw new Error("채널 데이터를 가져올 수 없습니다."); }
           return response.json();
         })
         .then(data => {
           if(data && data.content){
             document.getElementById("sharedContent").innerHTML = data.content;
-            // 공유 요청이 있는 경우, "채택" 버튼 표시
+            // 채널 내 공유 요청이 있으면 공유 요청 영역에 "채택" 버튼 표시
             if(data.share && data.share !== ""){
               document.getElementById("shareOffer").innerHTML =
-                '<button onclick="adoptSharedContent()">채택</button> <span>새 공유 내용이 있습니다.</span>';
+                '<button onclick="adoptSharedContent()">공유 내용 채택</button> <span>새 공유 내용이 있습니다.</span>';
             } else {
               document.getElementById("shareOffer").innerHTML = "";
             }
@@ -438,34 +435,26 @@
         });
     }
     
-    // 채널 연결 및 종료 버튼 이벤트
     document.getElementById("joinChannelBtn").addEventListener("click", joinChannel);
     document.getElementById("leaveChannelBtn").addEventListener("click", leaveChannel);
     
-    // 공유 버튼: 호스트가 현재 에디터 내용을 채널에 공유 요청으로 보내기
-    // 실제 구현 시, 이 함수는 GitHub Actions나 별도 API를 호출하여 channel.json 파일의 "share" 필드를 업데이트해야 함
+    // 공유 버튼: 호스트가 공유 요청을 보내면 백엔드 API(예: GitHub Actions)를 통해 업데이트하게 됩니다.
     document.getElementById("shareBtn").addEventListener("click", function(){
-      if(!currentChannel){
-        alert("채널에 연결되지 않았습니다.");
-        return;
-      }
+      if(!currentChannel){ alert("채널에 연결되지 않았습니다."); return; }
       var contentToShare = document.getElementById("sharedContent").innerHTML;
-      // 여기서는 간단히 alert로 알림하고, 실제 업데이트는 백엔드에서 처리하도록 함
-      alert("공유 요청이 전송되었습니다. (실제 구현 시 GitHub Actions 등으로 파일을 업데이트하세요.)");
-      // 예시: 백엔드 API 호출 후, 채널 파일의 "share" 필드를 업데이트하면, 폴링된 fetchChannelData에서 이를 감지
+      // 실제 구현에서는 이 값을 백엔드 API로 전송하여 channel.json 파일의 "share" 필드를 업데이트합니다.
+      alert("공유 요청이 전송되었습니다. (실제 구현 시 backend API를 호출하세요.)");
     });
     
-    // 사용자(호스트가 아닌)에게 공유된 내용을 받아들이는 함수
+    // 다른 사용자(호스트가 아닌)가 공유된 내용을 채택하는 함수
     function adoptSharedContent(){
-      // 실제 구현 시, "share" 필드를 클리어(백엔드 API 호출)한 후, 에디터 내용에 반영
-      // 여기서는 단순히 채널 파일의 share 내용을 에디터에 적용하는 것으로 처리
+      // 실제 구현에서는 백엔드 API를 통해 채널 파일의 "share" 필드를 클리어하고 에디터에 적용합니다.
       fetch(channelFileURL)
         .then(response => response.json())
         .then(data => {
           if(data && data.share && data.share !== ""){
             document.getElementById("sharedContent").innerHTML = data.share;
             alert("공유된 내용이 채택되었습니다.");
-            // 채택 후 공유 내용은 클리어되어야 합니다. (백엔드로 처리)
           }
         })
         .catch(error => console.error(error));
@@ -505,26 +494,26 @@
     
     function toggleExplanation(btn) {
       const id = btn.dataset.explanationId;
-      let box = document.getElementById(id);
-      if(box){
-        box.style.display = (box.style.display==="none") ? "block" : "none";
+      let exBox = document.getElementById(id);
+      if(exBox){
+        exBox.style.display = (exBox.style.display==="none") ? "block" : "none";
       } else {
-        box = document.createElement("div");
-        box.className = "explanation-box";
-        box.id = id;
+        exBox = document.createElement("div");
+        exBox.className = "explanation-box";
+        exBox.id = id;
         const input = document.createElement("input");
         input.type = "text";
         input.placeholder = "설명을 입력하세요...";
         input.addEventListener("keydown", function(e){
-          if(e.key==="Enter"){
+          if(e.key === "Enter"){
             e.preventDefault();
             const val = this.value.trim();
             if(!val){ alert("설명을 입력해주세요."); return; }
-            box.innerHTML = "<p>" + val + "</p>";
+            exBox.innerHTML = "<p>" + val + "</p>";
           }
         });
-        box.appendChild(input);
-        btn.parentNode.insertBefore(box, btn.nextSibling);
+        exBox.appendChild(input);
+        btn.parentNode.insertBefore(exBox, btn.nextSibling);
       }
     }
     
@@ -541,7 +530,6 @@
     const container = document.getElementById("editorContainer");
     const observer = new MutationObserver(() => { cleanupOrphanExplanationBoxes(); });
     observer.observe(container, { childList: true, subtree: true });
-    
   </script>
 </body>
 </html>
