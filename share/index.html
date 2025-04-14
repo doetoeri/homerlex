@@ -1,42 +1,52 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Homerlex – Collaborative Word Processor</title>
-  <link rel="icon" href="icon.png" type="image/png" />
-  <!-- Pretendard 폰트 -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard/dist/web/static/pretendard.css" />
+  <meta charset="UTF-8">
+  <!-- 모바일 최적화 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Homerlex-Next innovation of Notepads.</title>
+  
+  <!-- 파비콘 -->
+  <link rel="icon" type="image/png" href="icon.png">
+  
+  <!-- Pretendard 글꼴 CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  
   <!-- Material Icons -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
-  <!-- PeerJS (데모 서버용 최신 버전) -->
-  <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  
+  <!-- PeerJS (WebRTC 신호 처리용) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.3.2/peerjs.min.js"></script>
+  
   <style>
     :root {
-      --primary: #0078D4;
-      --on-primary: #ffffff;
-      --surface: #ffffff;
-      --on-surface: #323130;
-      --background: #F3F2F1;
-      --corner-radius: 10px;
-      --font-family: 'Pretendard', sans-serif;
-      --font-size: 16px;
-      --icon-size: 28px;
-      --button-padding: 0.75rem 1rem;
+      --copilot-primary: #0078D4;
+      --copilot-on-primary: #ffffff;
+      /* 글래스모피즘용 반투명 표면 */
+      --copilot-surface: rgba(255, 255, 255, 0.4);
+      --copilot-on-surface: #323130;
+      /* 부드러운 그라데이션 배경 */
+      --copilot-background: linear-gradient(135deg, #E3F2FD, #FFFFFF);
+      --copilot-corner-radius: 16px;
+      --copilot-font-family: 'Pretendard', sans-serif;
+      --copilot-font-size: 16px;
+      --toolbar-gap: 12px;
+      --tab-margin: 8px;
+      --md3-button-padding: 0.5rem 1rem;
     }
+    
     body {
-      font-family: var(--font-family);
-      font-weight: 600;
+      background: var(--copilot-background);
+      font-family: var(--copilot-font-family);
       margin: 20px;
-      background-color: var(--background);
-      color: var(--on-surface);
+      color: var(--copilot-on-surface);
     }
+    
     header {
       display: flex;
-      align-items: center;
-      justify-content: center;
       flex-direction: column;
-      margin-bottom: 20px;
+      align-items: center;
+      margin-bottom: 10px;
     }
     .logo {
       max-width: 100px;
@@ -45,33 +55,39 @@
     }
     .tagline {
       font-size: 18px;
-      color: var(--primary);
+      color: var(--copilot-primary);
       margin-top: 5px;
     }
-    /* 탭바 */
+    
+    /* 탭바 스타일 */
     #tabBar {
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 16px;
+      gap: var(--tab-margin);
+      margin-bottom: 10px;
     }
     .tab-btn {
-      background-color: var(--surface);
-      border: 1px solid #ccc;
+      background: var(--copilot-surface);
+      border: 1px solid rgba(255, 255, 255, 0.3);
       padding: 8px 16px;
-      border-radius: var(--corner-radius);
+      border-radius: var(--copilot-corner-radius);
       cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.2s ease;
+      transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      backdrop-filter: blur(10px);
     }
     .tab-btn:hover {
-      background-color: #e1e1e1;
+      background: rgba(255, 255, 255, 0.6);
     }
     .tab-btn.active {
-      background-color: var(--primary);
-      color: var(--on-primary);
+      background: var(--copilot-primary);
+      color: var(--copilot-on-primary);
       font-weight: bold;
       transform: scale(1.05);
+      box-shadow: 0 4px 20px rgba(0, 120, 212, 0.4);
     }
     .tab-btn.new-tab {
       font-size: 20px;
@@ -80,14 +96,18 @@
       border: none;
       padding: 8px;
     }
-    /* 메모장 컨테이너 */
+    
+    /* 메모장 컨테이너 (글래스모피즘 효과 적용) */
     #notepadContainer {
+      position: relative;
       width: 80%;
       max-width: 800px;
       margin: 0 auto 20px;
-      border-radius: var(--corner-radius);
-      background-color: var(--surface);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-radius: var(--copilot-corner-radius);
+      background: var(--copilot-surface);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
     }
     .notepad {
       padding: 20px;
@@ -100,30 +120,39 @@
       margin-bottom: 0;
       line-height: 1.5;
     }
+    
     /* 하단 툴바 */
     #toolbar {
       display: flex;
       justify-content: center;
-      gap: 12px;
+      gap: var(--toolbar-gap);
       flex-wrap: wrap;
       margin-top: 10px;
       transition: all 0.3s ease;
+      padding: 10px;
+      border-radius: var(--copilot-corner-radius);
+      background: var(--copilot-surface);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 4px 16px rgba(31, 38, 135, 0.2);
     }
     .format-btn {
-      background-color: var(--surface);
-      color: var(--on-surface);
+      background: var(--copilot-surface);
+      color: var(--copilot-on-surface);
       border: none;
       width: 40px;
       height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: var(--corner-radius);
+      border-radius: var(--copilot-corner-radius);
       cursor: pointer;
       transition: background-color 0.2s ease, transform 0.1s ease;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
     }
     .format-btn:hover {
-      background-color: #e1e1e1;
+      background: rgba(255, 255, 255, 0.6);
     }
     .format-btn:active {
       transform: scale(0.98);
@@ -132,60 +161,84 @@
       font-size: 24px;
     }
     #convertBtn {
-      background-color: var(--primary);
-      color: var(--on-primary);
+      background: var(--copilot-primary);
+      color: var(--copilot-on-primary);
       border: none;
-      padding: var(--button-padding);
-      border-radius: var(--corner-radius);
-      font-size: var(--font-size);
+      padding: var(--md3-button-padding);
+      border-radius: var(--copilot-corner-radius);
+      font-size: var(--copilot-font-size);
       cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.1s ease;
+      transition: background-color 0.2s ease, transform 0.1s ease;
     }
     #convertBtn:hover {
-      background-color: rgba(255,255,255,0.3);
-      color: var(--primary);
+      background: var(--copilot-on-primary);
+      color: var(--copilot-primary);
     }
-    #convertBtn:active {
-      transform: scale(0.98);
-    }
+    
+    /* 텍스트 버튼 스타일 */
     .highlight-btn {
       display: inline-block;
-      background-color: var(--primary);
+      white-space: pre-wrap;
+      background: var(--copilot-primary);
       border: none;
-      padding: var(--button-padding);
-      border-radius: var(--corner-radius);
-      color: var(--on-primary);
+      padding: var(--md3-button-padding);
+      border-radius: var(--copilot-corner-radius);
+      color: var(--copilot-on-primary);
       cursor: pointer;
       transition: transform 0.1s ease;
       margin: 2px 0;
     }
-    .highlight-btn:hover {
-      background-color: rgba(255,255,255,0.3);
-      color: var(--primary);
-    }
     .highlight-btn:active {
       transform: scale(0.97);
     }
-    /* 공유 탭 동기화 영역 */
+    
+    /* 설명 입력창 */
+    .explanation-box {
+      background: var(--copilot-surface);
+      border-radius: var(--copilot-corner-radius);
+      padding: 15px;
+      margin-top: 5px;
+      animation: fadeIn 0.3s ease-out;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .explanation-box input {
+      width: 100%;
+      font-family: inherit;
+      font-size: var(--copilot-font-size);
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      background-color: #ffffff;
+    }
+    
+    /* 공유 탭 동기화 영역 (PeerJS 사용) */
     #sharedSyncContainer {
       width: 80%;
       max-width: 800px;
-      margin: 0 auto 24px;
-      background-color: var(--surface);
-      padding: 24px;
-      border-radius: var(--corner-radius);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin: 20px auto;
+      background: var(--copilot-surface);
+      padding: 15px;
+      border-radius: var(--copilot-corner-radius);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 4px 16px rgba(31, 38, 135, 0.2);
     }
     #sharedSyncContainer h2 {
       margin-top: 0;
       font-size: 20px;
-      color: var(--primary);
+      color: var(--copilot-primary);
     }
     #sharedContent {
       width: 100%;
       height: 80px;
-      font-family: var(--font-family);
-      font-size: var(--font-size);
+      font-family: var(--copilot-font-family);
+      font-size: var(--copilot-font-size);
       padding: 8px;
       border: 1px solid #ccc;
       border-radius: 4px;
@@ -195,207 +248,92 @@
     #syncButton {
       margin-top: 10px;
       padding: 8px 16px;
-      background-color: var(--primary);
-      color: var(--on-primary);
+      background: var(--copilot-primary);
+      color: var(--copilot-on-primary);
       border: none;
       border-radius: 4px;
       cursor: pointer;
-      font-size: var(--font-size);
-      transition: background-color 0.3s ease;
+      font-size: var(--copilot-font-size);
+      transition: background-color 0.2s ease, transform 0.1s ease;
     }
     #syncButton:hover {
-      background-color: rgba(255,255,255,0.3);
-      color: var(--primary);
+      background: var(--copilot-on-primary);
+      color: var(--copilot-primary);
     }
-    /* 추가 기능 툴바 (제안, 공유) */
-    #extraToolbar {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      margin: 0 auto 24px;
-    }
-    #extraToolbar button {
-      background-color: var(--primary);
-      border: none;
-      color: var(--on-primary);
-      font-size: 16px;
-      padding: 10px 16px;
-      border-radius: var(--corner-radius);
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    #extraToolbar button:hover {
-      background-color: rgba(255,255,255,0.3);
-      color: var(--primary);
-    }
-    /* 제안 목록 패널 */
-    #proposalsPanel {
-      width: 80%;
-      max-width: 900px;
-      margin: 0 auto 24px;
-      padding: 16px;
-      background-color: var(--surface);
-      border-radius: var(--corner-radius);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      display: none;
-    }
-    #proposalsPanel h3 {
-      margin: 0 0 12px;
-      font-size: 20px;
-    }
-    #proposalsList {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    #proposalsList li {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 12px;
-      margin-bottom: 8px;
-      border: 1px solid #ddd;
-      border-radius: var(--corner-radius);
-      background-color: var(--surface);
-    }
-    #proposalsList li:last-child {
-      border-bottom: none;
-    }
-    #proposalsList button {
-      background-color: var(--primary);
-      border: none;
-      color: var(--on-primary);
-      font-size: 14px;
-      padding: 6px 12px;
-      border-radius: var(--corner-radius);
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    #proposalsList button:hover {
-      background-color: rgba(255,255,255,0.3);
-      color: var(--primary);
-    }
-    /* 제안 모달 */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 200;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.4);
-    }
-    .modal-content {
-      background-color: var(--surface);
-      margin: 15% auto;
-      padding: 24px;
-      border-radius: var(--corner-radius);
-      width: 80%;
-      max-width: 500px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    }
-    .modal-content textarea {
-      width: 100%;
-      height: 150px;
-      font-size: var(--font-size);
-      padding: 12px;
-      border: 1px solid #ccc;
-      border-radius: var(--corner-radius);
-      resize: vertical;
-    }
+    
+    /* 모바일 전용 스타일 */
     @media screen and (max-width: 600px) {
-      #notepadContainer, #sharedSyncContainer { width: 100%; padding: 12px; }
-      #toolbar, #extraToolbar { flex-direction: column; gap: 8px; }
-      #tabBar { flex-direction: column; }
+      body { margin: 10px; }
+      #notepadContainer, #sharedSyncContainer { width: 100%; }
+      #toolbar { flex-direction: column; align-items: center; }
+      .tab-btn, .format-btn, #convertBtn, #syncButton { width: 90%; margin-bottom: 8px; }
+      .logo { max-width: 80px; }
+      .tagline { font-size: 16px; }
     }
   </style>
 </head>
 <body>
-  <!-- 헤더 -->
+  <!-- 헤더: 로고와 태그라인 -->
   <header>
-    <img src="logo.png" alt="Homerlex Logo" class="logo" />
-    <div class="site-title">Homerlex</div>
+    <img src="logo.png" alt="Homerlex Logo" class="logo">
+    <div class="tagline">Homerlex</div>
   </header>
-
-  <!-- 탭 영역 -->
+  
+  <!-- 탭바 -->
   <div id="tabBar">
     <button class="tab-btn active" data-tab="1">Document 1</button>
     <button class="tab-btn new-tab" id="newTabBtn">
       <span class="material-icons">add</span>
     </button>
   </div>
-
-  <!-- 노트패드 영역 -->
+  
+  <!-- 메모장 영역 -->
   <div id="notepadContainer">
-    <div id="notepad" class="notepad" contenteditable="true">
-      <p>여기에 메모를 작성하세요.<br>줄바꿈이 그대로 적용됩니다.</p>
+    <div id="notepad" contenteditable="true" class="notepad">
+      <p>
+        여기에 메모를 작성하세요.<br>
+        줄바꿈이 그대로 보존됩니다.<br>
+        원하는 텍스트 블록을 선택한 후 "텍스트 버튼 적용"을 누르면,<br>
+        각 줄마다 텍스트 버튼으로 변환됩니다.
+      </p>
     </div>
   </div>
-
-  <!-- 서식 툴바 -->
+  
+  <!-- 하단 툴바 -->
   <div id="toolbar">
-    <button class="format-btn" onclick="execCmd('bold')" title="굵게">
+    <button id="convertBtn" class="md3-button">텍스트 버튼 적용</button>
+    <button class="format-btn" onclick="execCmd('bold')">
       <span class="material-icons">format_bold</span>
     </button>
-    <button class="format-btn" onclick="execCmd('italic')" title="이탤릭">
+    <button class="format-btn" onclick="execCmd('italic')">
       <span class="material-icons">format_italic</span>
     </button>
-    <button class="format-btn" onclick="execCmd('underline')" title="밑줄">
+    <button class="format-btn" onclick="execCmd('underline')">
       <span class="material-icons">format_underlined</span>
     </button>
-    <button class="format-btn" onclick="execCmd('strikeThrough')" title="취소선">
+    <button class="format-btn" onclick="execCmd('strikeThrough')">
       <span class="material-icons">strikethrough_s</span>
     </button>
-    <button class="format-btn" onclick="execCmd('justifyLeft')" title="좌측 정렬">
+    <button class="format-btn" onclick="execCmd('justifyLeft')">
       <span class="material-icons">format_align_left</span>
     </button>
-    <button class="format-btn" onclick="execCmd('justifyCenter')" title="중앙 정렬">
+    <button class="format-btn" onclick="execCmd('justifyCenter')">
       <span class="material-icons">format_align_center</span>
     </button>
-    <button class="format-btn" onclick="execCmd('justifyRight')" title="우측 정렬">
+    <button class="format-btn" onclick="execCmd('justifyRight')">
       <span class="material-icons">format_align_right</span>
     </button>
-    <button id="convertBtn" onclick="convertSelectedText()" title="텍스트 버튼 적용">
-      <span class="material-icons">smart_button</span>
-    </button>
   </div>
-
-  <!-- 공유 탭 동기화 영역 (PeerJS 그룹 연결) -->
+  
+  <!-- 공유 탭 동기화 영역 (PeerJS 사용) -->
   <div id="sharedSyncContainer">
     <h2>공유 탭 동기화</h2>
-    <div id="groupInfo"></div>
     <textarea id="sharedContent" placeholder="여기에 공유할 내용을 입력하세요."></textarea>
     <button id="syncButton">동기화 전송</button>
   </div>
-
-  <!-- 추가 기능 툴바: 제안 보내기 및 공유하기 -->
-  <div id="extraToolbar">
-    <button onclick="openProposalModal()">제안 보내기</button>
-    <button onclick="shareChannel()">공유하기</button>
-  </div>
-
-  <!-- 제안 목록 패널 -->
-  <div id="proposalsPanel">
-    <h3>제안 목록</h3>
-    <ul id="proposalsList"></ul>
-  </div>
-
-  <!-- 제안 모달 -->
-  <div id="proposalModal" class="modal">
-    <div class="modal-content">
-      <h3>변경 제안 보내기</h3>
-      <textarea id="proposalText"></textarea>
-      <div style="text-align:center; margin-top:16px;">
-        <button onclick="submitProposal()">제안 보내기</button>
-        <button onclick="closeProposalModal()" style="margin-left:8px;">취소</button>
-      </div>
-    </div>
-  </div>
+  
   <script>
-    /* ── 그룹 기반 실시간 동기화 (PeerJS 연결) ── */
-    // 그룹 및 기기 고유 설정
+    // ── 1. 고유 시드 및 그룹 설정 ──
     function generateUUID() {
       return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
         var r = crypto.getRandomValues(new Uint8Array(1))[0] % 16;
@@ -414,20 +352,172 @@
       localStorage.setItem('deviceSeed', deviceSeed);
     }
     console.log("Device Seed:", deviceSeed, "Group:", groupID);
-
-    // 호스트 여부 결정: 호스트는 그룹의 중앙 브로드캐스터 역할을 수행합니다.
-    var isHost = confirm("이 기기를 호스트로 지정하시겠습니까? (OK: 호스트, Cancel: 클라이언트)");
-    var hostId = groupID + "-host"; // 고정 호스트 ID
-    var peerId = isHost ? hostId : groupID + "-" + deviceSeed.substr(-5);
-
-    // PeerJS 객체 생성 (무료 데모 서버 사용; HTTPS 환경에서 실행)
-    var myPeer = new Peer(peerId, { host: "0.peerjs.com", secure: true, port: 443 });
-    var connections = []; // 호스트가 관리할 클라이언트 연결 목록
-    var hostConn = null;  // 클라이언트에서는 호스트와의 연결
-
+    
+    // ── 2. PeerJS를 이용한 기기간 동기화 ──
+    var isHost = confirm("이 기기를 호스트로 만드시겠습니까? (예: OK, 아니면 취소)");
+    var hostId = groupID + "-host"; // 그룹 내의 고정 호스트 ID
+    var peerId = isHost ? hostId : groupID + "-" + deviceSeed.split("-").pop();
+    
+    var myPeer = new Peer(peerId);
+    var connections = [];
+    var hostConn = null;
+    
     myPeer.on('open', function(id) {
-      console.log("PeerJS 연결 완료. 내 ID:", id);
-      document.getElementById("groupInfo").innerText = "그룹: " + groupID + " | 내 ID: " + id +
-      </script>
-  </body>
+      console.log("PeerJS 연결됨. 내 ID:", id);
+      if (isHost) {
+        myPeer.on('connection', function(conn) {
+          console.log("클라이언트 접속:", conn.peer);
+          connections.push(conn);
+          conn.on('data', function(data) {
+            updateSharedContentLocal(data);
+            broadcastSharedData(data, conn);
+          });
+        });
+      } else {
+        hostConn = myPeer.connect(hostId);
+        hostConn.on('open', function() {
+          console.log("호스트와 연결됨:", hostId);
+          hostConn.on('data', function(data) {
+            updateSharedContentLocal(data);
+          });
+        });
+      }
+    });
+    
+    function broadcastSharedData(data, sender) {
+      connections.forEach(function(conn) {
+        if (conn !== sender) {
+          conn.send(data);
+        }
+      });
+    }
+    
+    function updateSharedContentLocal(data) {
+      document.getElementById("sharedContent").value = data.content;
+    }
+    
+    document.getElementById("syncButton").addEventListener("click", function() {
+      var content = document.getElementById("sharedContent").value;
+      var data = { content: content };
+      if (isHost) {
+        updateSharedContentLocal(data);
+        broadcastSharedData(data);
+      } else {
+        if (hostConn && hostConn.open) {
+          hostConn.send(data);
+        } else {
+          alert("호스트와 아직 연결되지 않았습니다.");
+        }
+      }
+      console.log("동기화 전송:", data);
+    });
+    
+    // ── 3. 기존 Notepad 기능 (탭, 포맷 버튼, 변환 버튼 등) ──
+    let activeTab = "1";
+    const notepad = document.getElementById('notepad');
+    
+    notepad.addEventListener('input', function() {
+      localStorage.setItem("notepad-content-" + activeTab, notepad.innerHTML);
+    });
+    
+    window.addEventListener('DOMContentLoaded', function() {
+      const storedContent = localStorage.getItem("notepad-content-" + activeTab);
+      if (storedContent !== null) {
+        notepad.innerHTML = storedContent;
+      }
+    });
+    
+    function execCmd(command) {
+      document.execCommand(command, false, null);
+    }
+    
+    document.getElementById('convertBtn').addEventListener('click', function() {
+      const selection = window.getSelection();
+      if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        const selectedText = range.toString().trim();
+        if (!selectedText) return;
+        const fragment = document.createDocumentFragment();
+        selectedText.split(/\n/).forEach(line => {
+          const trimmedLine = line.trim();
+          if (!trimmedLine) return;
+          const btn = document.createElement('button');
+          btn.className = 'highlight-btn';
+          btn.textContent = trimmedLine;
+          btn.dataset.explanationId = Math.random().toString(36).substr(2, 9);
+          fragment.appendChild(btn);
+          fragment.appendChild(document.createElement('br'));
+          btn.addEventListener('click', toggleExplanation);
+        });
+        range.deleteContents();
+        range.insertNode(fragment);
+        selection.removeAllRanges();
+      }
+    });
+    
+    const tabBar = document.getElementById('tabBar');
+    tabBar.addEventListener('click', function(e) {
+      const tab = e.target.closest('.tab-btn');
+      if (tab && !tab.classList.contains('new-tab')) {
+        localStorage.setItem("notepad-content-" + activeTab, notepad.innerHTML);
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        tab.classList.add('active');
+        activeTab = tab.dataset.tab || "1";
+        const content = localStorage.getItem("notepad-content-" + activeTab);
+        notepad.innerHTML = content !== null ? content : "";
+        notepad.focus();
+      }
+    });
+    
+    document.getElementById('newTabBtn').addEventListener('click', function() {
+      const newCount = document.querySelectorAll('.tab-btn').length;
+      const newTab = document.createElement('button');
+      newTab.className = 'tab-btn';
+      newTab.textContent = `Document ${newCount}`;
+      newTab.dataset.tab = newCount;
+      tabBar.insertBefore(newTab, this);
+      localStorage.setItem("notepad-content-" + newCount, "");
+    });
+    
+    tabBar.addEventListener('dblclick', function(e) {
+      const btn = e.target.closest('.tab-btn');
+      if (btn && !btn.classList.contains('new-tab')) {
+        const newName = prompt("새 탭 이름을 입력하세요", btn.textContent);
+        if (newName && newName.trim() !== "") {
+          btn.textContent = newName.trim();
+        }
+      }
+    });
+    
+    function toggleExplanation(event) {
+      event.stopPropagation();
+      const btn = event.target.closest("button");
+      const id = btn.dataset.explanationId;
+      let explanationBox = document.getElementById(id);
+      if (explanationBox) {
+        explanationBox.style.display = (explanationBox.style.display === "none") ? "block" : "none";
+      } else {
+        explanationBox = document.createElement("div");
+        explanationBox.className = "explanation-box";
+        explanationBox.id = id;
+        const inputField = document.createElement("input");
+        inputField.type = "text";
+        inputField.placeholder = "여기에 설명을 입력하세요...";
+        inputField.addEventListener("keydown", function(e) {
+          if(e.key === "Enter") {
+            e.preventDefault();
+            const text = inputField.value;
+            if (!text.trim()){
+              alert("설명을 입력해주세요.");
+              return;
+            }
+            explanationBox.innerHTML = "<p>" + text + "</p>";
+          }
+        });
+        explanationBox.appendChild(inputField);
+        btn.parentNode.insertBefore(explanationBox, btn.nextSibling);
+      }
+    }
+  </script>
+</body>
 </html>
