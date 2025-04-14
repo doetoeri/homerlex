@@ -2,9 +2,10 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Homerlex – Word Processor with PeerJS</title>
   <link rel="icon" href="icon.png" type="image/png" />
+  
   <!-- Pretendard 폰트 (세미볼드 적용) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard/dist/web/static/pretendard.css" />
   <!-- Material Icons -->
@@ -19,7 +20,7 @@
       --surface: #ffffff;
       --on-surface: #323130;
       --background: #F1F3F4;
-      --corner-radius: 20px;
+      --corner-radius: 10px; /* 버튼의 라운드 값을 10px로 줄임 */
       --font-family: 'Pretendard', sans-serif;
       --font-size: 16px;
       --button-padding: 0.75rem 1rem;
@@ -89,6 +90,7 @@
       border: none;
       cursor: pointer;
       padding: 4px;
+      font-size: 20px;
     }
     .tab-actions button:hover {
       color: var(--primary);
@@ -118,7 +120,7 @@
       white-space: pre-wrap;
       font-size: var(--font-size);
     }
-    /* 서식 툴바 (큰 라운드 아이콘 버튼) */
+    /* 서식 툴바 (아이콘 위주의 큰 라운드 버튼) */
     #toolbar {
       display: flex;
       justify-content: center;
@@ -143,7 +145,7 @@
     #toolbar button:hover {
       background-color: rgba(255,255,255,0.3);
     }
-    /* 텍스트 버튼 변환 및 호버 설명 기능 */
+    /* 텍스트 버튼 변환 및 호버 설명 */
     .highlight-btn {
       background-color: var(--primary);
       border: none;
@@ -172,10 +174,20 @@
     /* 추가 기능 툴바: 제안, 공유, PeerJS 연결 */
     #extraToolbar {
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       gap: 16px;
       margin: 0 auto 24px;
+    }
+    /* 내가 사용하는 PeerID를 표시할 영역 (버튼 대신 텍스트 레이블) */
+    #peerIdDisplay {
+      background-color: var(--primary);
+      color: var(--on-primary);
+      padding: 8px 12px;
+      border-radius: var(--corner-radius);
+      font-size: 16px;
+      margin-right: 16px;
+      white-space: nowrap;
     }
     #extraToolbar button {
       background-color: var(--primary);
@@ -318,8 +330,9 @@
     </button>
   </div>
 
-  <!-- 추가 기능 툴바: 제안 보내기, 공유하기, PeerJS 연결 -->
+  <!-- 추가 기능 툴바: 내 ID 표시, 제안 보내기, 공유하기, PeerJS 연결 -->
   <div id="extraToolbar">
+    <span id="peerIdDisplay"></span>
     <button onclick="openProposalModal()">제안 보내기</button>
     <button onclick="shareChannel()">공유하기</button>
     <button onclick="connectToPeer()">연결</button>
@@ -344,7 +357,7 @@
   </div>
 
   <script>
-    /* ------------------ 탭 및 워드프로세서 기능 ------------------ */
+    /* ------------- 탭 및 노트 저장/관리 ------------- */
     let activeTab = "1";
     const storageKeyPrefix = "notepad-content-";
     const proposalsKeyPrefix = "channel-proposals-";
@@ -450,10 +463,12 @@
       }
     });
 
-    /* ------------------ 서식 기능 ------------------ */
-    function execCmd(cmd) { document.execCommand(cmd, false, null); }
+    /* ------------- 서식 기능 ------------- */
+    function execCmd(cmd) {
+      document.execCommand(cmd, false, null);
+    }
 
-    /* ------------------ 텍스트 버튼 변환 및 호버 설명 ------------------ */
+    /* ------------- 텍스트 버튼 변환 및 호버 설명 ------------- */
     function convertSelectedText() {
       const sel = window.getSelection();
       if(sel.rangeCount === 0) return;
@@ -496,7 +511,7 @@
       }
     }
 
-    /* ------------------ 제안(Proposal) 기능 ------------------ */
+    /* ------------- 제안(Proposal) 기능 ------------- */
     function getProposals() {
       const stored = localStorage.getItem(proposalsKeyPrefix + activeTab);
       return stored ? JSON.parse(stored) : [];
@@ -575,11 +590,20 @@
       document.getElementById("proposalModal").style.display = "none";
     }
 
-    /* ------------------ PeerJS 연결 기능 (PeerJS 사용) ------------------ */
+    /* ------------- PeerJS 연결 기능 ------------- */
     let myPeer = null;
     let conn = null;
-    
-    // 5글자 코드 생성 + 필요시 길이 증가
+    // 5글자 코드를 생성하는 함수
+    function generateCode(length) {
+      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      let code = "";
+      for (let i = 0; i < length; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return code;
+    }
+    // PeerJS 객체를 생성하는 함수: 초기 길이(5글자)로 시작하고,
+    // 충돌 시 길이를 1씩 늘려 고유한 ID를 생성합니다.
     function createPeer(initialLength) {
       let len = initialLength;
       function tryCreate() {
@@ -587,12 +611,7 @@
         let p = new Peer(candidate);
         p.on('open', function(id) {
           myPeer = p;
-          // 내 ID 표시 (extraToolbar에 추가, 기존 버튼 옆에)
-          const idBtn = document.createElement("button");
-          idBtn.textContent = "내 ID: " + id;
-          idBtn.style.cursor = "default";
-          idBtn.disabled = true;
-          document.getElementById("extraToolbar").appendChild(idBtn);
+          document.getElementById("peerIdDisplay").textContent = "내 ID: " + id;
         });
         p.on('error', function(err) {
           if(err.type === "unavailable-id") {
@@ -606,8 +625,7 @@
       }
       tryCreate();
     }
-
-    // 연결: 다른 기기의 Peer ID를 입력 받아 연결
+    // 연결: 다른 기기의 PeerID 입력받아 연결
     function connectToPeer() {
       const remoteId = prompt("연결할 Peer ID를 입력하세요:");
       if(remoteId) {
@@ -640,12 +658,12 @@
         prompt("이 URL을 복사해서 다른 기기로 보내세요:", shareURL);
       }
     }
-    
-    // PeerJS 연결 버튼: "연결" 버튼 클릭 시 호출
+
     function connectToPeerBtn() {
       connectToPeer();
     }
 
+    /* ------------- 초기화 ------------- */
     window.addEventListener("DOMContentLoaded", function(){
       loadActiveTabContent();
       if(!localStorage.getItem(storageKeyPrefix + "1")){
@@ -674,6 +692,21 @@
         conn.send(document.getElementById("notepad").innerHTML);
       }
     });
+
+    /* ------------- PeerJS 연결 버튼 ------------- */
+    function connectToPeer() {
+      const remoteId = prompt("연결할 Peer ID를 입력하세요:");
+      if(remoteId) {
+        conn = myPeer.connect(remoteId);
+        conn.on('open', function(){
+          alert("연결되었습니다.");
+          conn.on('data', function(data){
+            document.getElementById("notepad").innerHTML = data;
+            saveActiveTabContent();
+          });
+        });
+      }
+    }
   </script>
 </body>
 </html>
