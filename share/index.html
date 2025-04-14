@@ -2,11 +2,10 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Homerlex – Word Processor with PeerJS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Homerlex – Collaborative Word Processor</title>
   <link rel="icon" href="icon.png" type="image/png" />
-  
-  <!-- Pretendard 폰트 (세미볼드 적용) -->
+  <!-- Pretendard 폰트 (세미볼드) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard/dist/web/static/pretendard.css" />
   <!-- Material Icons -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
@@ -15,16 +14,16 @@
   
   <style>
     :root {
-      --primary: #2196F3;
+      --primary: #0078D4; /* Microsoft 스타일 블루 */
       --on-primary: #ffffff;
       --surface: #ffffff;
       --on-surface: #323130;
-      --background: #F1F3F4;
-      --corner-radius: 10px; /* 버튼의 라운드 값을 10px로 줄임 */
+      --background: #F3F2F1;
+      --corner-radius: 10px; /* 버튼 및 컨테이너 라운드 */
       --font-family: 'Pretendard', sans-serif;
       --font-size: 16px;
-      --button-padding: 0.75rem 1rem;
       --icon-size: 28px;
+      --button-padding: 0.75rem 1rem;
     }
     body {
       font-family: var(--font-family);
@@ -48,7 +47,8 @@
       margin-right: 16px;
     }
     .site-title {
-      font-size: 36px;
+      font-size: 28px;
+      font-weight: bold;
     }
     /* 탭 영역 */
     #tabBar {
@@ -120,7 +120,7 @@
       white-space: pre-wrap;
       font-size: var(--font-size);
     }
-    /* 서식 툴바 (아이콘 위주의 큰 라운드 버튼) */
+    /* 서식 툴바: 아이콘 위주의 큰 라운드 버튼 */
     #toolbar {
       display: flex;
       justify-content: center;
@@ -159,7 +159,7 @@
       transition: background-color 0.3s;
     }
     .highlight-btn:hover {
-      background-color: rgba(33,150,243,0.8);
+      background-color: rgba(0,120,212,0.85);
     }
     .explanation-box {
       position: absolute;
@@ -171,7 +171,7 @@
       margin-top: 4px;
       z-index: 10;
     }
-    /* 추가 기능 툴바: 제안, 공유, PeerJS 연결 */
+    /* 추가 기능 툴바: 내 ID, 제안, 공유, 연결 */
     #extraToolbar {
       display: flex;
       align-items: center;
@@ -179,15 +179,14 @@
       gap: 16px;
       margin: 0 auto 24px;
     }
-    /* 내가 사용하는 PeerID를 표시할 영역 (버튼 대신 텍스트 레이블) */
     #peerIdDisplay {
       background-color: var(--primary);
       color: var(--on-primary);
       padding: 8px 12px;
       border-radius: var(--corner-radius);
       font-size: 16px;
-      margin-right: 16px;
       white-space: nowrap;
+      margin-right: 16px;
     }
     #extraToolbar button {
       background-color: var(--primary);
@@ -200,7 +199,7 @@
       transition: background-color 0.3s;
     }
     #extraToolbar button:hover {
-      background-color: rgba(33,150,243,0.8);
+      background-color: rgba(0,120,212,0.85);
     }
     /* 제안 목록 패널 */
     #proposalsPanel {
@@ -226,8 +225,11 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 8px 0;
-      border-bottom: 1px solid #ddd;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      border: 1px solid #ddd;
+      border-radius: var(--corner-radius);
+      background-color: var(--surface);
     }
     #proposalsList li:last-child {
       border-bottom: none;
@@ -243,7 +245,7 @@
       transition: background-color 0.3s;
     }
     #proposalsList button:hover {
-      background-color: rgba(33,150,243,0.8);
+      background-color: rgba(0,120,212,0.85);
     }
     /* 제안 모달 */
     .modal {
@@ -289,7 +291,7 @@
 
   <!-- 탭 영역 -->
   <div id="tabBar">
-    <!-- 탭은 JS로 생성; 초기 기본 채널 1 -->
+    <!-- 탭은 동적으로 생성 (기본 채널 1) -->
     <button class="new-tab-btn" id="newTabBtn">
       <span class="material-icons">add</span>
     </button>
@@ -330,7 +332,7 @@
     </button>
   </div>
 
-  <!-- 추가 기능 툴바: 내 ID 표시, 제안 보내기, 공유하기, PeerJS 연결 -->
+  <!-- 추가 기능 툴바: 내 ID, 제안, 공유, 연결 -->
   <div id="extraToolbar">
     <span id="peerIdDisplay"></span>
     <button onclick="openProposalModal()">제안 보내기</button>
@@ -364,7 +366,7 @@
 
     function saveActiveTabContent() {
       localStorage.setItem(storageKeyPrefix + activeTab, document.getElementById("notepad").innerHTML);
-      if(conn && conn.open) {
+      if(conn && conn.open){
         conn.send(document.getElementById("notepad").innerHTML);
       }
     }
@@ -388,15 +390,15 @@
       tabDiv.className = "tab";
       tabDiv.dataset.tab = tabId;
 
-      const labelSpan = document.createElement("span");
+      let labelSpan = document.createElement("span");
       labelSpan.className = "tab-label";
       labelSpan.textContent = tabName;
       tabDiv.appendChild(labelSpan);
 
-      const actionsDiv = document.createElement("div");
+      let actionsDiv = document.createElement("div");
       actionsDiv.className = "tab-actions";
 
-      const renameBtn = document.createElement("button");
+      let renameBtn = document.createElement("button");
       renameBtn.className = "tab-rename";
       renameBtn.title = "채널 이름 변경";
       renameBtn.innerHTML = '<span class="material-icons" style="font-size:20px;">edit</span>';
@@ -409,11 +411,11 @@
       });
       actionsDiv.appendChild(renameBtn);
 
-      const deleteBtn = document.createElement("button");
+      let deleteBtn = document.createElement("button");
       deleteBtn.className = "tab-delete";
       deleteBtn.title = "채널 삭제";
       deleteBtn.innerHTML = '<span class="material-icons" style="font-size:20px;">delete</span>';
-      deleteBtn.addEventListener("click", function(e) {
+      deleteBtn.addEventListener("click", function(e){
         e.stopPropagation();
         if(confirm("이 채널을 삭제하시겠습니까?")){
           localStorage.removeItem(storageKeyPrefix + tabDiv.dataset.tab);
@@ -431,7 +433,7 @@
         }
       });
       actionsDiv.appendChild(deleteBtn);
-
+      
       tabDiv.appendChild(actionsDiv);
       tabDiv.addEventListener("click", function(){
         saveActiveTabContent();
@@ -456,6 +458,7 @@
     });
 
     window.addEventListener("DOMContentLoaded", loadActiveTabContent);
+
     document.getElementById("notepad").addEventListener("input", function(){
       localStorage.setItem(storageKeyPrefix + activeTab, document.getElementById("notepad").innerHTML);
       if(conn && conn.open){
@@ -464,9 +467,7 @@
     });
 
     /* ------------- 서식 기능 ------------- */
-    function execCmd(cmd) {
-      document.execCommand(cmd, false, null);
-    }
+    function execCmd(cmd) { document.execCommand(cmd, false, null); }
 
     /* ------------- 텍스트 버튼 변환 및 호버 설명 ------------- */
     function convertSelectedText() {
@@ -492,7 +493,7 @@
       e.stopPropagation();
       const btn = e.currentTarget;
       let expId = btn.dataset.expId;
-      if(!expId){
+      if(!expId) {
         expId = "exp_" + Math.random().toString(36).substr(2,9);
         btn.dataset.expId = expId;
       }
@@ -602,8 +603,7 @@
       }
       return code;
     }
-    // PeerJS 객체를 생성하는 함수: 초기 길이(5글자)로 시작하고,
-    // 충돌 시 길이를 1씩 늘려 고유한 ID를 생성합니다.
+    // PeerJS 객체 생성: 기본 5글자, 충돌 시 자동 증가
     function createPeer(initialLength) {
       let len = initialLength;
       function tryCreate() {
@@ -625,14 +625,14 @@
       }
       tryCreate();
     }
-    // 연결: 다른 기기의 PeerID 입력받아 연결
+    // 다른 기기의 Peer ID를 입력받아 연결
     function connectToPeer() {
       const remoteId = prompt("연결할 Peer ID를 입력하세요:");
       if(remoteId) {
         conn = myPeer.connect(remoteId);
-        conn.on('open', function() {
+        conn.on('open', function(){
           alert("연결되었습니다.");
-          conn.on('data', function(data) {
+          conn.on('data', function(data){
             document.getElementById("notepad").innerHTML = data;
             saveActiveTabContent();
           });
@@ -644,23 +644,19 @@
       const noteContent = document.getElementById("notepad").innerHTML;
       const encodedContent = encodeURIComponent(noteContent);
       const shareURL = window.location.origin + window.location.pathname + "?share=" + encodedContent;
-      if(navigator.share){
+      if(navigator.share) {
         navigator.share({
           title: 'Homerlex Shared Channel',
           url: shareURL,
           text: '현재 채널 내용을 공유합니다.'
         }).catch(err => console.error("공유 실패:", err));
-      } else if(navigator.clipboard){
+      } else if(navigator.clipboard) {
         navigator.clipboard.writeText(shareURL)
-        .then(() => { alert("공유 URL이 클립보드에 복사되었습니다:\n" + shareURL); })
-        .catch(err => { alert("URL 복사 실패:" + err); });
+          .then(() => { alert("공유 URL이 클립보드에 복사되었습니다:\n" + shareURL); })
+          .catch(err => { alert("URL 복사 실패:" + err); });
       } else {
         prompt("이 URL을 복사해서 다른 기기로 보내세요:", shareURL);
       }
-    }
-
-    function connectToPeerBtn() {
-      connectToPeer();
     }
 
     /* ------------- 초기화 ------------- */
@@ -694,19 +690,7 @@
     });
 
     /* ------------- PeerJS 연결 버튼 ------------- */
-    function connectToPeer() {
-      const remoteId = prompt("연결할 Peer ID를 입력하세요:");
-      if(remoteId) {
-        conn = myPeer.connect(remoteId);
-        conn.on('open', function(){
-          alert("연결되었습니다.");
-          conn.on('data', function(data){
-            document.getElementById("notepad").innerHTML = data;
-            saveActiveTabContent();
-          });
-        });
-      }
-    }
+    function connectToPeerBtn() { connectToPeer(); }
   </script>
 </body>
 </html>
