@@ -3,14 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Homerlex – Shared Channel</title>
+  <title>Homerlex – Shared Channel (Local Share via SimplePeer)</title>
   <link rel="icon" type="image/png" href="icon.png">
   
   <!-- Pretendard 폰트: 모든 글꼴을 Pretendard (Semibold)로 적용 -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard/dist/web/static/pretendard.css">
-  
-  <!-- Material Icons for 아이콘들 -->
+  <!-- Material Icons -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  
+  <!-- SimplePeer 라이브러리 -->
+  <script src="https://unpkg.com/simple-peer@latest/simplepeer.min.js"></script>
   
   <style>
     :root {
@@ -33,7 +35,7 @@
       background-color: var(--background);
     }
     
-    /* 헤더: 로고와 사이트 타이틀만 있음 */
+    /* 헤더: 로고와 사이트 타이틀 */
     header {
       display: flex;
       align-items: center;
@@ -166,9 +168,10 @@
       opacity: 0.85;
     }
     
-    /* 추가 기능 툴바 – 제안 보내기, 공유하기 버튼 */
+    /* 추가 기능 툴바 – 기존 제안 보내기, 공유하기 버튼 외에 WebRTC 연결용 버튼 추가 */
     #extraToolbar {
       display: flex;
+      flex-wrap: wrap;
       justify-content: center;
       align-items: center;
       gap: 12px;
@@ -261,12 +264,10 @@
   </style>
 </head>
 <body>
-  <!-- 헤더: 로고와 사이트 타이틀만 표시 -->
+  <!-- 헤더: 로고와 사이트 타이틀 -->
   <header>
-    <div style="display: flex; align-items: center;">
-      <img src="logo.png" alt="Homerlex Logo" class="logo">
-      <div class="site-title">Homerlex</div>
-    </div>
+    <img src="logo.png" alt="Homerlex Logo" class="logo">
+    <div class="site-title">Homerlex</div>
   </header>
   
   <!-- 채널(탭) 영역 -->
@@ -319,10 +320,13 @@
     </button>
   </div>
   
-  <!-- 추가 기능 툴바 (제안 보내기 및 공유하기) -->
+  <!-- 추가 기능 툴바: 제안 보내기, 공유하기, 그리고 WebRTC 연결 용 (수동 신호) 버튼들 -->
   <div id="extraToolbar">
     <button onclick="openProposalModal()">제안 보내기</button>
     <button onclick="shareChannel()">공유하기</button>
+    <button onclick="startOffer()">연결 Offer</button>
+    <button onclick="setAnswer()">답변 입력</button>
+    <button onclick="startAnswer()">연결 Answer</button>
   </div>
   
   <!-- 제안 목록 패널 -->
@@ -342,17 +346,20 @@
   </div>
   
   <script>
-    /* ===== 기본 채널 노트 및 탭 기능 ===== */
+    // ----- 기존 채널 노트 및 탭 관련 -----
     let activeTab = "1";
     const storageKeyPrefix = "notepad-content-";    
-    const proposalsKeyPrefix = "channel-proposals-";  // 채널별 제안 저장
+    const proposalsKeyPrefix = "channel-proposals-";
     
     function saveActiveTabContent() {
       localStorage.setItem(storageKeyPrefix + activeTab, document.getElementById("notepad").innerHTML);
+      // 실시간 공유 중이면 전송
+      if (peer && peer.connected) {
+        peer.send(document.getElementById("notepad").innerHTML);
+      }
     }
     
     function loadActiveTabContent() {
-      // URL에 share 파라미터가 있으면 해당 내용을 로드
       const params = new URLSearchParams(window.location.search);
       if (params.has("share")) {
         const sharedContent = decodeURIComponent(params.get("share"));
@@ -447,6 +454,9 @@
     window.addEventListener("DOMContentLoaded", loadActiveTabContent);
     document.getElementById("notepad").addEventListener("input", function() {
       localStorage.setItem(storageKeyPrefix + activeTab, document.getElementById("notepad").innerHTML);
+      if (peer && peer.connected) {
+        peer.send(document.getElementById("notepad").innerHTML);
+      }
     });
     
     /* ===== 서식 기능 ===== */
@@ -537,25 +547,61 @@
       document.getElementById("proposalModal").style.display = "none";
     }
     
-    /* ===== 공유 기능: 노트의 HTML을 URL 쿼리 파라미터로 공유 ===== */
-    function shareChannel() {
-      const noteContent = document.getElementById("notepad").innerHTML;
-      const encodedContent = encodeURIComponent(noteContent);
-      const shareURL = window.location.origin + window.location.pathname + "?share=" + encodedContent;
-      
-      if (navigator.share) {
-        navigator.share({
-          title: 'Homerlex Shared Channel',
-          url: shareURL,
-          text: '현재 채널 내용을 공유합니다.'
-        }).catch(err => console.error("공유 실패: ", err));
-      } else if (navigator.clipboard) {
-        navigator.clipboard.writeText(shareURL)
-        .then(() => { alert("공유 URL이 클립보드에 복사되었습니다:\n" + shareURL); })
-        .catch(err => { alert("URL 복사 실패: " + err); });
-      } else {
-        prompt("이 URL을 복사해서 다른 기기로 보내세요:", shareURL);
+    /* ===== 공유 기능: SimplePeer를 이용한 로컬 피어 연결 (수동 신호 교환) ===== */
+    let peer = null;
+    // Offer를 생성하는 함수 (연결 Offer 버튼)
+    function startOffer() {
+      peer = new SimplePeer({ initiator: true, trickle: false });
+      peer.on('signal', data => {
+        alert("Offer Signal:\n" + JSON.stringify(data));
+      });
+      peer.on('connect', () => {
+        alert("연결이 완료되었습니다. 이제 노트 내용이 실시간 공유됩니다.");
+      });
+      peer.on('data', data => {
+        const receivedContent = data.toString();
+        document.getElementById("notepad").innerHTML = receivedContent;
+        saveActiveTabContent();
+      });
+    }
+    
+    // 답변을 입력하여 Offer어 쪽 피어에 전달 (Offer 쪽에서 사용)
+    function setAnswer() {
+      const answerSignal = prompt("Answer Signal을 입력하세요:");
+      if (answerSignal) {
+        try {
+          const answerData = JSON.parse(answerSignal);
+          peer.signal(answerData);
+        } catch(e) {
+          alert("잘못된 입력입니다.");
+        }
       }
+    }
+    
+    // Answer 생성 함수 (연결 Answer 버튼)
+    function startAnswer() {
+      peer = new SimplePeer({ initiator: false, trickle: false });
+      const offerSignal = prompt("Offer Signal을 입력하세요:");
+      if (offerSignal) {
+        try {
+          const offerData = JSON.parse(offerSignal);
+          peer.signal(offerData);
+        } catch(e) {
+          alert("잘못된 입력입니다.");
+          return;
+        }
+      }
+      peer.on('signal', data => {
+        alert("Answer Signal:\n" + JSON.stringify(data));
+      });
+      peer.on('connect', () => {
+        alert("연결이 완료되었습니다. 이제 노트 내용이 실시간 공유됩니다.");
+      });
+      peer.on('data', data => {
+        const receivedContent = data.toString();
+        document.getElementById("notepad").innerHTML = receivedContent;
+        saveActiveTabContent();
+      });
     }
     
     window.addEventListener("DOMContentLoaded", function() {
@@ -570,4 +616,4 @@
     });
   </script>
 </body>
-</html> 
+</html>
