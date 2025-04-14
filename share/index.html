@@ -160,6 +160,7 @@
     .format-btn .material-icons {
       font-size: 24px;
     }
+    /* 변환 버튼은 이제 텍스트 대신 아이콘으로 표시 */
     #convertBtn {
       background: var(--copilot-primary);
       color: var(--copilot-on-primary);
@@ -293,15 +294,19 @@
       <p>
         여기에 메모를 작성하세요.<br>
         줄바꿈이 그대로 보존됩니다.<br>
-        원하는 텍스트 블록을 선택한 후 "텍스트 버튼 적용"을 누르면,<br>
-        각 줄마다 텍스트 버튼으로 변환됩니다.
+        원하는 텍스트 블록을 선택한 후 변환 아이콘을 누르면,<br>
+        각 줄마다 텍스트 버튼으로 변환됩니다.<br>
+        이미 변환된 텍스트 버튼을 선택한 상태에서 다시 누르면 해제됩니다.
       </p>
     </div>
   </div>
   
   <!-- 하단 툴바 -->
   <div id="toolbar">
-    <button id="convertBtn" class="md3-button">텍스트 버튼 적용</button>
+    <!-- 변환 버튼: 텍스트 대신 Material Icon 적용 -->
+    <button id="convertBtn" class="md3-button">
+      <span class="material-icons">text_fields</span>
+    </button>
     <button class="format-btn" onclick="execCmd('bold')">
       <span class="material-icons">format_bold</span>
     </button>
@@ -431,28 +436,43 @@
       document.execCommand(command, false, null);
     }
     
+    // 변환 버튼 클릭 이벤트
     document.getElementById('convertBtn').addEventListener('click', function() {
       const selection = window.getSelection();
-      if (selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        const selectedText = range.toString().trim();
-        if (!selectedText) return;
-        const fragment = document.createDocumentFragment();
-        selectedText.split(/\n/).forEach(line => {
-          const trimmedLine = line.trim();
-          if (!trimmedLine) return;
-          const btn = document.createElement('button');
-          btn.className = 'highlight-btn';
-          btn.textContent = trimmedLine;
-          btn.dataset.explanationId = Math.random().toString(36).substr(2, 9);
-          fragment.appendChild(btn);
-          fragment.appendChild(document.createElement('br'));
-          btn.addEventListener('click', toggleExplanation);
-        });
-        range.deleteContents();
-        range.insertNode(fragment);
+      if (!selection.rangeCount) return;
+      const range = selection.getRangeAt(0);
+      
+      // 만약 선택한 텍스트의 시작과 끝 노드가 같은 highlight-btn 내부라면 해제(언래핑)
+      if (selection.anchorNode && selection.anchorNode.parentElement &&
+          selection.focusNode && selection.focusNode.parentElement &&
+          selection.anchorNode.parentElement === selection.focusNode.parentElement &&
+          selection.anchorNode.parentElement.classList.contains('highlight-btn')) {
+        const btn = selection.anchorNode.parentElement;
+        const textNode = document.createTextNode(btn.textContent);
+        btn.parentNode.replaceChild(textNode, btn);
         selection.removeAllRanges();
+        return;
       }
+      
+      const selectedText = range.toString().trim();
+      if (!selectedText) return;
+      
+      // 선택된 텍스트를 줄별로 분리하여 각각 button으로 변환 (기존 중복 적용 방지)
+      const fragment = document.createDocumentFragment();
+      selectedText.split(/\n/).forEach(line => {
+        const trimmedLine = line.trim();
+        if (!trimmedLine) return;
+        const btn = document.createElement('button');
+        btn.className = 'highlight-btn';
+        btn.textContent = trimmedLine;
+        btn.dataset.explanationId = Math.random().toString(36).substr(2, 9);
+        fragment.appendChild(btn);
+        fragment.appendChild(document.createElement('br'));
+        btn.addEventListener('click', toggleExplanation);
+      });
+      range.deleteContents();
+      range.insertNode(fragment);
+      selection.removeAllRanges();
     });
     
     const tabBar = document.getElementById('tabBar');
