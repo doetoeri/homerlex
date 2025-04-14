@@ -4,12 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Homerlex – Word Processor</title>
-  <link rel="icon" type="image/png" href="icon.png" />
-  <!-- Pretendard 폰트 (세미볼드 적용) -->
+  <link rel="icon" href="icon.png" type="image/png" />
+  
+  <!-- Pretendard 폰트 (세미볼드) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard/dist/web/static/pretendard.css" />
   <!-- Material Icons -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
-
+  <!-- PeerJS 라이브러리 (CDN) -->
+  <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+  
   <style>
     :root {
       --primary: #2196F3;
@@ -30,13 +33,13 @@
       background-color: var(--background);
       color: var(--on-surface);
     }
-    /* 헤더: 로고와 사이트 타이틀 (심플하고 좌우 패딩 넉넉하게) */
+    /* 헤더 */
     header {
       display: flex;
       align-items: center;
       padding: 16px 24px;
       background-color: var(--surface);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       margin-bottom: 16px;
     }
     .logo {
@@ -105,7 +108,7 @@
       border: 1px solid #ccc;
       background-color: var(--surface);
       border-radius: var(--corner-radius);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       padding: 24px;
     }
     #notepad {
@@ -115,7 +118,7 @@
       white-space: pre-wrap;
       font-size: var(--font-size);
     }
-    /* 서식 툴바 (큰 아이콘 위주의 버튼들) */
+    /* 서식 툴바 */
     #toolbar {
       display: flex;
       justify-content: center;
@@ -138,23 +141,34 @@
       transition: background-color 0.3s;
     }
     #toolbar button:hover {
-      background-color: rgba(255, 255, 255, 0.3);
+      background-color: rgba(255,255,255,0.3);
     }
-    /* 텍스트 버튼 변환 전용 버튼 (아이콘 + 큰 라운드) */
-    #convertBtn {
+    /* 텍스트 버튼 변환 */
+    .highlight-btn {
       background-color: var(--primary);
       border: none;
       color: var(--on-primary);
-      font-size: var(--icon-size);
-      padding: 8px;
-      border-radius: 50%;
+      font-size: var(--font-size);
+      font-weight: 700;
+      padding: 6px 10px;
+      border-radius: var(--corner-radius);
       cursor: pointer;
+      margin: 0 4px;
       transition: background-color 0.3s;
     }
-    #convertBtn:hover {
-      background-color: rgba(255, 255, 255, 0.3);
+    .highlight-btn:hover {
+      background-color: rgba(33,150,243,0.8);
     }
-    /* 추가 기능 툴바: 제안 보내기 및 공유하기 - 간결하게 */
+    .explanation-box {
+      position: absolute;
+      background-color: var(--surface);
+      border: 1px solid #ccc;
+      padding: 8px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-top: 4px;
+    }
+    /* 추가 기능 툴바: 제안, 공유, PeerJS 연결 */
     #extraToolbar {
       display: flex;
       justify-content: center;
@@ -189,7 +203,6 @@
     #proposalsPanel h3 {
       margin: 0 0 12px;
       font-size: 20px;
-      font-family: var(--serif-font);
     }
     #proposalsList {
       list-style: none;
@@ -248,6 +261,10 @@
       border-radius: var(--corner-radius);
       resize: vertical;
     }
+    @media screen and (max-width: 600px) {
+      #notepadContainer { width: 100%; padding: 12px; }
+      #toolbar, #extraToolbar { flex-direction: column; gap: 8px; }
+    }
   </style>
 </head>
 <body>
@@ -259,7 +276,7 @@
 
   <!-- 탭 영역 -->
   <div id="tabBar">
-    <!-- 탭은 JS로 생성; 기본적으로 Document 1 -->
+    <!-- 탭은 JS로 생성; 기본적으로 채널 1 -->
     <button class="new-tab-btn" id="newTabBtn">
       <span class="material-icons">add</span>
     </button>
@@ -300,10 +317,12 @@
     </button>
   </div>
 
-  <!-- 추가 기능 툴바 -->
+  <!-- 추가 기능 툴바: 제안, 공유, 그리고 PeerJS 연결 기능 -->
   <div id="extraToolbar">
     <button onclick="openProposalModal()">제안 보내기</button>
     <button onclick="shareChannel()">공유하기</button>
+    <button onclick="showMyPeerId()">내 Peer ID</button>
+    <button onclick="connectToPeer()">연결</button>
   </div>
 
   <!-- 제안 목록 패널 -->
@@ -325,26 +344,28 @@
   </div>
 
   <script>
-    /* ===== 탭 관리 기능 ===== */
+    /* ----- 탭 및 노트 저장 기능 ----- */
     let activeTab = "1";
     const storageKeyPrefix = "notepad-content-";
     const proposalsKeyPrefix = "channel-proposals-";
 
     function saveActiveTabContent() {
       localStorage.setItem(storageKeyPrefix + activeTab, document.getElementById("notepad").innerHTML);
+      if(conn && conn.open){
+        conn.send(document.getElementById("notepad").innerHTML);
+      }
     }
 
     function loadActiveTabContent() {
       const params = new URLSearchParams(window.location.search);
-      if (params.has("share")) {
+      if(params.has("share")){
         const sharedContent = decodeURIComponent(params.get("share"));
         document.getElementById("notepad").innerHTML = sharedContent;
         saveActiveTabContent();
         window.history.replaceState({}, document.title, window.location.pathname);
       } else {
         const stored = localStorage.getItem(storageKeyPrefix + activeTab);
-        document.getElementById("notepad").innerHTML =
-          stored !== null ? stored : "<p>여기에 내용을 입력하세요.</p>";
+        document.getElementById("notepad").innerHTML = stored !== null ? stored : "<p>여기에 내용을 입력하세요.</p>";
       }
       renderProposals();
     }
@@ -369,7 +390,7 @@
       renameBtn.addEventListener("click", function(e) {
         e.stopPropagation();
         const newName = prompt("새 채널 이름:", labelSpan.textContent);
-        if (newName && newName.trim() !== "") {
+        if(newName && newName.trim() !== "") {
           labelSpan.textContent = newName.trim();
         }
       });
@@ -381,12 +402,12 @@
       deleteBtn.innerHTML = '<span class="material-icons" style="font-size:20px;">delete</span>';
       deleteBtn.addEventListener("click", function(e) {
         e.stopPropagation();
-        if (confirm("이 채널을 삭제하시겠습니까?")) {
+        if(confirm("이 채널을 삭제하시겠습니까?")){
           localStorage.removeItem(storageKeyPrefix + tabDiv.dataset.tab);
           localStorage.removeItem(proposalsKeyPrefix + tabDiv.dataset.tab);
           tabDiv.remove();
           const remaining = document.querySelectorAll(".tab");
-          if (remaining.length > 0) {
+          if(remaining.length > 0){
             activeTab = remaining[0].dataset.tab;
             remaining[0].classList.add("active");
             loadActiveTabContent();
@@ -397,9 +418,9 @@
         }
       });
       actionsDiv.appendChild(deleteBtn);
-
+      
       tabDiv.appendChild(actionsDiv);
-      tabDiv.addEventListener("click", function() {
+      tabDiv.addEventListener("click", function(){
         saveActiveTabContent();
         document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
         tabDiv.classList.add("active");
@@ -409,57 +430,71 @@
       return tabDiv;
     }
 
-    function initTabs() {
-      const tabBar = document.getElementById("tabBar");
-      // Clear existing tabs (if any) except the new-tab button
-      const existingTabs = document.querySelectorAll("#tabBar .tab");
-      existingTabs.forEach(tab => tab.remove());
-      // Create default tab if none exists
-      if (!localStorage.getItem(storageKeyPrefix + "1")) {
-        localStorage.setItem(storageKeyPrefix + "1", "<p>여기에 내용을 입력하세요.</p>");
-      }
-      const defaultTab = createTab("1", "채널 1");
-      defaultTab.classList.add("active");
-      tabBar.insertBefore(defaultTab, document.getElementById("newTabBtn"));
-    }
-
-    document.getElementById("newTabBtn").addEventListener("click", function() {
-      const tabs = document.querySelectorAll("#tabBar .tab");
+    const tabBar = document.getElementById("tabBar");
+    document.querySelectorAll(".tab").forEach(el => el.remove());
+    const defaultTab = createTab("1", "채널 1");
+    defaultTab.classList.add("active");
+    tabBar.insertBefore(defaultTab, document.getElementById("newTabBtn"));
+    document.getElementById("newTabBtn").addEventListener("click", function(){
+      const tabs = document.querySelectorAll(".tab");
       const newId = (tabs.length + 1).toString();
       const newTab = createTab(newId, "채널 " + newId);
       document.getElementById("tabBar").insertBefore(newTab, this);
     });
 
     window.addEventListener("DOMContentLoaded", loadActiveTabContent);
-
-    document.getElementById("notepad").addEventListener("input", function() {
+    document.getElementById("notepad").addEventListener("input", function(){
       localStorage.setItem(storageKeyPrefix + activeTab, document.getElementById("notepad").innerHTML);
+      if(conn && conn.open){
+        conn.send(document.getElementById("notepad").innerHTML);
+      }
     });
 
-    /* ===== 서식 기능 ===== */
+    /* ----- 서식 기능 ----- */
     function execCmd(cmd) {
       document.execCommand(cmd, false, null);
     }
 
-    /* ===== 텍스트 버튼 변환 기능 ===== */
+    /* ----- 텍스트 버튼 변환 및 호버 기능 ----- */
     function convertSelectedText() {
       const sel = window.getSelection();
-      if (sel.rangeCount === 0) return;
+      if(sel.rangeCount === 0) return;
       const range = sel.getRangeAt(0);
       const text = range.toString().trim();
-      if (!text) return;
-      // 생성할 버튼 요소
+      if(!text) return;
       const btn = document.createElement("button");
       btn.className = "highlight-btn";
       btn.textContent = text;
-      btn.onclick = function(e) { e.stopPropagation(); alert("버튼: " + this.textContent); };
+      btn.onclick = function(e){
+        e.stopPropagation();
+        toggleExplanation(e);
+      };
       range.deleteContents();
       range.insertNode(btn);
       sel.removeAllRanges();
       document.getElementById("notepad").dispatchEvent(new Event("input"));
     }
-    
-    /* ===== 제안(Proposal) 기능 ===== */
+
+    function toggleExplanation(e) {
+      e.stopPropagation();
+      const btn = e.currentTarget;
+      const expId = btn.dataset.expId || (btn.dataset.expId = "exp_" + Math.random().toString(36).substr(2,9));
+      let box = document.getElementById(expId);
+      if(box){
+        box.style.display = box.style.display === "none" ? "block" : "none";
+      } else {
+        box = document.createElement("div");
+        box.id = expId;
+        box.className = "explanation-box";
+        const input = document.createElement("input");
+        input.type = "text";
+        input.placeholder = "설명 입력";
+        box.appendChild(input);
+        btn.parentNode.insertBefore(box, btn.nextSibling);
+      }
+    }
+
+    /* ----- 제안(Proposal) 기능 ----- */
     function getProposals() {
       const stored = localStorage.getItem(proposalsKeyPrefix + activeTab);
       return stored ? JSON.parse(stored) : [];
@@ -474,7 +509,7 @@
       const proposals = getProposals();
       const proposalsList = document.getElementById("proposalsList");
       proposalsList.innerHTML = "";
-      if (proposals.length === 0) {
+      if(proposals.length === 0) {
         document.getElementById("proposalsPanel").style.display = "none";
         return;
       }
@@ -496,7 +531,7 @@
 
     function submitProposal() {
       const text = document.getElementById("proposalText").value;
-      if (text.trim() === "") {
+      if(text.trim() === ""){
         alert("제안 내용을 입력해주세요.");
         return;
       }
@@ -515,7 +550,7 @@
     function adoptProposal(proposalId) {
       const proposals = getProposals();
       const proposal = proposals.find(p => p.id === proposalId);
-      if (!proposal) return;
+      if(!proposal) return;
       document.getElementById("notepad").innerHTML = proposal.content;
       saveActiveTabContent();
       const updated = proposals.filter(p => p.id !== proposalId);
@@ -538,82 +573,87 @@
       document.getElementById("proposalModal").style.display = "none";
     }
 
-    /* ===== 공유 기능 (SimplePeer, 5글자 신호 코드) ===== */
-    let peer = null;
-    let currentOfferCode = "";
-    // Offer 생성: 5글자 코드 생성 후, 전체 offer 신호를 localStorage에 저장하고 코드 출력
-    function startOffer() {
-      peer = new SimplePeer({ initiator: true, trickle: false });
-      peer.on('signal', data => {
-        currentOfferCode = generateCode(5);
-        localStorage.setItem("offer_" + currentOfferCode, JSON.stringify(data));
-        alert("Offer Code: " + currentOfferCode);
-      });
-      peer.on('connect', () => { alert("연결 완료!"); });
-      peer.on('data', data => {
-        document.getElementById("notepad").innerHTML = data.toString();
-        saveActiveTabContent();
-      });
-    }
-    // Answer 측: offer 코드를 입력받아, 저장된 offer 신호를 불러온 후 signal 처리, 그리고 answer 신호를 생성해 5글자로 출력
-    function startAnswer() {
-      const offerCode = prompt("Offer 코드를 입력하세요 (5글자):");
-      if (!offerCode) return;
-      const offerSignalStr = localStorage.getItem("offer_" + offerCode);
-      if (!offerSignalStr) {
-        alert("해당 offer 코드가 없습니다.");
-        return;
+    /* ----- PeerJS 연결 기능 ----- */
+    // PeerJS: 내 Peer 객체 생성 및 연결
+    let myPeer = new Peer(); // 기본 PeerServer 사용 (무료)
+    let conn = null;
+
+    myPeer.on('open', function(id) {
+      // 내 Peer ID를 extraToolbar에 표시
+      const btn = document.createElement("button");
+      btn.textContent = "내 ID: " + id;
+      btn.style.cursor = "default";
+      btn.disabled = true;
+      document.getElementById("extraToolbar").appendChild(btn);
+    });
+
+    function connectToPeer() {
+      const remoteId = prompt("연결할 Peer ID를 입력하세요:");
+      if(remoteId) {
+        conn = myPeer.connect(remoteId);
+        conn.on('open', function() {
+          alert("연결되었습니다.");
+          conn.on('data', function(data) {
+            document.getElementById("notepad").innerHTML = data;
+            saveActiveTabContent();
+          });
+        });
       }
-      const offerData = JSON.parse(offerSignalStr);
-      peer = new SimplePeer({ initiator: false, trickle: false });
-      peer.signal(offerData);
-      peer.on('signal', data => {
-        const answerCode = generateCode(5);
-        localStorage.setItem("answer_" + offerCode, JSON.stringify(data));
-        alert("Answer Code: " + answerCode);
-      });
-      peer.on('connect', () => { alert("연결 완료!"); });
-      peer.on('data', data => {
-        document.getElementById("notepad").innerHTML = data.toString();
-        saveActiveTabContent();
-      });
-    }
-    // Offer 측: answer 코드를 입력받아, 해당 answer 신호를 불러와서 연결
-    function setAnswer() {
-      const answerCode = prompt("Answer 코드를 입력하세요 (5글자 for offer " + currentOfferCode + "):");
-      if (!answerCode) return;
-      const answerSignalStr = localStorage.getItem("answer_" + currentOfferCode);
-      if (!answerSignalStr) {
-        alert("해당 answer 코드가 없습니다.");
-        return;
-      }
-      try {
-        const answerData = JSON.parse(answerSignalStr);
-        peer.signal(answerData);
-      } catch (e) {
-        alert("답변 신호 처리 중 오류.");
-      }
-    }
-    // 5글자 코드 생성 함수
-    function generateCode(length) {
-      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-      let code = "";
-      for (let i = 0; i < length; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return code;
     }
 
-    window.addEventListener("DOMContentLoaded", function() {
-      const params = new URLSearchParams(window.location.search);
-      if (params.has("share")) {
-        const sharedContent = decodeURIComponent(params.get("share"));
-        document.getElementById("notepad").innerHTML = sharedContent;
-        saveActiveTabContent();
-        window.history.replaceState({}, document.title, window.location.pathname);
+    // 공유 기능: 기존 URL 기반 공유 방식(추가 옵션)
+    function shareChannel() {
+      const noteContent = document.getElementById("notepad").innerHTML;
+      const encodedContent = encodeURIComponent(noteContent);
+      const shareURL = window.location.origin + window.location.pathname + "?share=" + encodedContent;
+      if(navigator.share){
+        navigator.share({
+          title: 'Homerlex Shared Channel',
+          url: shareURL,
+          text: '현재 채널 내용을 공유합니다.'
+        }).catch(err => console.error("공유 실패:", err));
+      } else if(navigator.clipboard){
+        navigator.clipboard.writeText(shareURL)
+          .then(() => { alert("공유 URL이 클립보드에 복사되었습니다:\n" + shareURL); })
+          .catch(err => { alert("URL 복사 실패:" + err); });
+      } else {
+        prompt("이 URL을 복사해서 다른 기기로 보내세요:", shareURL);
       }
+    }
+
+    // 새 PeerJS 연결: "연결" 버튼
+    function showPeerConnect() {
+      connectToPeer();
+    }
+
+    /* ----- 초기화 ----- */
+    window.addEventListener("DOMContentLoaded", function(){
       loadActiveTabContent();
-      initTabs();
+      // 초기 탭 생성
+      if(!localStorage.getItem(storageKeyPrefix + "1")){
+        localStorage.setItem(storageKeyPrefix + "1", "<p>여기에 내용을 입력하세요.</p>");
+      }
+      const tabBar = document.getElementById("tabBar");
+      const existingTabs = document.querySelectorAll("#tabBar .tab");
+      if(existingTabs.length === 0){
+        const defaultTab = createTab("1", "채널 1");
+        defaultTab.classList.add("active");
+        tabBar.insertBefore(defaultTab, document.getElementById("newTabBtn"));
+      }
+    });
+
+    document.getElementById("newTabBtn").addEventListener("click", function(){
+      const tabs = document.querySelectorAll("#tabBar .tab");
+      const newId = (tabs.length + 1).toString();
+      const newTab = createTab(newId, "채널 " + newId);
+      document.getElementById("tabBar").insertBefore(newTab, this);
+    });
+
+    document.getElementById("notepad").addEventListener("input", function(){
+      localStorage.setItem(storageKeyPrefix + activeTab, document.getElementById("notepad").innerHTML);
+      if(conn && conn.open){
+        conn.send(document.getElementById("notepad").innerHTML);
+      }
     });
   </script>
 </body>
