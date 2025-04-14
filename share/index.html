@@ -5,9 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Homerlex – Shared Channel</title>
   <link rel="icon" type="image/png" href="icon.png">
-  <!-- Google Fonts 및 Material Icons -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&family=Instrument+Serif&display=swap">
+  
+  <!-- Pretendard 폰트: 모든 글꼴을 Pretendard (Semibold)로 적용 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard/dist/web/static/pretendard.css">
+  
+  <!-- Material Icons for 아이콘들 -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  
   <style>
     :root {
       --primary: #2196F3;
@@ -16,13 +20,20 @@
       --on-surface: #323130;
       --background: #F1F3F4;
       --corner-radius: 20px;
-      --font-family: 'Noto Sans', sans-serif;
-      --serif-font: 'Instrument Serif', serif;
+      --font-family: 'Pretendard', sans-serif;
+      --serif-font: 'Pretendard', sans-serif;
       --font-size: 16px;
       --button-padding: 0.5rem 0.75rem;
     }
     
-    /* 헤더 */
+    body {
+      font-family: var(--font-family);
+      font-weight: 600;
+      margin: 0;
+      background-color: var(--background);
+    }
+    
+    /* 헤더: 로고와 사이트 타이틀만 있음 */
     header {
       display: flex;
       align-items: center;
@@ -36,13 +47,10 @@
       margin-right: 10px;
     }
     .site-title {
-      font-family: var(--serif-font);
       font-size: 32px;
-      font-weight: bold;
-      color: #000;
     }
     
-    /* 채널(탭) 영역 – 기존 문서 탭 대신 채널로 사용 */
+    /* 채널(탭) 영역 */
     #tabBar {
       display: flex;
       justify-content: center;
@@ -72,18 +80,18 @@
       padding: 4px 8px;
       border-radius: var(--corner-radius);
     }
-    .tab .tab-actions {
+    .tab-actions {
       display: flex;
       gap: 4px;
       margin-left: 4px;
     }
-    .tab .tab-actions button {
+    .tab-actions button {
       background: none;
       border: none;
       cursor: pointer;
       padding: 2px;
     }
-    .tab .tab-actions button:hover {
+    .tab-actions button:hover {
       color: var(--primary);
     }
     .new-tab-btn {
@@ -158,7 +166,7 @@
       opacity: 0.85;
     }
     
-    /* 추가 기능 툴바 영역 (제안, 공유) */
+    /* 추가 기능 툴바 – 제안 보내기, 공유하기 버튼 */
     #extraToolbar {
       display: flex;
       justify-content: center;
@@ -175,9 +183,6 @@
       font-size: 16px;
       cursor: pointer;
     }
-    #extraToolbar button:hover {
-      opacity: 0.85;
-    }
     
     /* 제안 목록 패널 */
     #proposalsPanel {
@@ -193,8 +198,8 @@
     }
     #proposalsPanel h3 {
       margin: 0 0 10px;
-      font-family: var(--serif-font);
       font-size: 20px;
+      font-family: var(--serif-font);
     }
     #proposalsList {
       list-style: none;
@@ -219,9 +224,6 @@
       color: var(--on-primary);
       cursor: pointer;
       font-size: 14px;
-    }
-    #proposalsList button:hover {
-      opacity: 0.85;
     }
     
     /* 모달 (제안 제출용) */
@@ -259,10 +261,12 @@
   </style>
 </head>
 <body>
-  <!-- 헤더 -->
+  <!-- 헤더: 로고와 사이트 타이틀만 표시 -->
   <header>
-    <img src="logo.png" alt="Homerlex Logo" class="logo">
-    <div class="site-title">Homerlex</div>
+    <div style="display: flex; align-items: center;">
+      <img src="logo.png" alt="Homerlex Logo" class="logo">
+      <div class="site-title">Homerlex</div>
+    </div>
   </header>
   
   <!-- 채널(탭) 영역 -->
@@ -315,10 +319,10 @@
     </button>
   </div>
   
-  <!-- 추가 기능 툴바 (제안, 공유) -->
+  <!-- 추가 기능 툴바 (제안 보내기 및 공유하기) -->
   <div id="extraToolbar">
     <button onclick="openProposalModal()">제안 보내기</button>
-    <button onclick="shareChannel()">공유</button>
+    <button onclick="shareChannel()">공유하기</button>
   </div>
   
   <!-- 제안 목록 패널 -->
@@ -338,7 +342,7 @@
   </div>
   
   <script>
-    /* ===== 기본 채널 노트 및 탭 저장 ===== */
+    /* ===== 기본 채널 노트 및 탭 기능 ===== */
     let activeTab = "1";
     const storageKeyPrefix = "notepad-content-";    
     const proposalsKeyPrefix = "channel-proposals-";  // 채널별 제안 저장
@@ -348,9 +352,18 @@
     }
     
     function loadActiveTabContent() {
-      const stored = localStorage.getItem(storageKeyPrefix + activeTab);
-      document.getElementById("notepad").innerHTML =
-        stored !== null ? stored : "<p>여기에 채널 내용을 입력하세요.</p>";
+      // URL에 share 파라미터가 있으면 해당 내용을 로드
+      const params = new URLSearchParams(window.location.search);
+      if (params.has("share")) {
+        const sharedContent = decodeURIComponent(params.get("share"));
+        document.getElementById("notepad").innerHTML = sharedContent;
+        saveActiveTabContent();
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else {
+        const stored = localStorage.getItem(storageKeyPrefix + activeTab);
+        document.getElementById("notepad").innerHTML =
+          stored !== null ? stored : "<p>여기에 채널 내용을 입력하세요.</p>";
+      }
       renderProposals();
     }
     
@@ -442,19 +455,16 @@
     }
     
     /* ===== 제안(Proposal) 기능 ===== */
-    // 제안 배열 불러오기 (채널별로)
     function getProposals() {
       const stored = localStorage.getItem(proposalsKeyPrefix + activeTab);
       return stored ? JSON.parse(stored) : [];
     }
     
-    // 제안 배열 저장 (채널별로)
     function saveProposals(proposals) {
       localStorage.setItem(proposalsKeyPrefix + activeTab, JSON.stringify(proposals));
       renderProposals();
     }
     
-    // 제안 목록 패널 렌더링
     function renderProposals() {
       const proposals = getProposals();
       const proposalsList = document.getElementById("proposalsList");
@@ -467,13 +477,11 @@
       proposals.forEach(proposal => {
         const li = document.createElement("li");
         li.innerHTML = `<strong>${proposal.author || "익명"}</strong> (${new Date(proposal.timestamp).toLocaleString()}): ${proposal.content}`;
-        // 채택 버튼
         const adoptBtn = document.createElement("button");
         adoptBtn.textContent = "채택";
         adoptBtn.addEventListener("click", function() {
           adoptProposal(proposal.id);
         });
-        // 거절 버튼
         const rejectBtn = document.createElement("button");
         rejectBtn.textContent = "거절";
         rejectBtn.addEventListener("click", function() {
@@ -485,7 +493,6 @@
       });
     }
     
-    // 제안 제출 (모달에서)
     function submitProposal() {
       const text = document.getElementById("proposalText").value;
       if (text.trim() === "") {
@@ -493,7 +500,7 @@
         return;
       }
       const proposal = {
-        id: Date.now(), // 고유 ID (간단하게 timestamp 사용)
+        id: Date.now(),
         author: prompt("작성자 이름을 입력하세요:", "익명") || "익명",
         timestamp: Date.now(),
         content: text.trim()
@@ -504,7 +511,6 @@
       closeProposalModal();
     }
     
-    // 채택: 제안 내용을 채널 노트로 업데이트
     function adoptProposal(proposalId) {
       const proposals = getProposals();
       const proposal = proposals.find(p => p.id === proposalId);
@@ -516,7 +522,6 @@
       alert("제안이 채택되었습니다.");
     }
     
-    // 거절: 제안 목록에서 삭제
     function rejectProposal(proposalId) {
       let proposals = getProposals();
       proposals = proposals.filter(p => p.id !== proposalId);
@@ -525,7 +530,6 @@
     
     /* ===== 모달 (제안 제출용) ===== */
     function openProposalModal() {
-      // 모달 textarea에 현재 노트 평문을 기본값으로 설정
       document.getElementById("proposalText").value = document.getElementById("notepad").innerText;
       document.getElementById("proposalModal").style.display = "block";
     }
@@ -533,24 +537,37 @@
       document.getElementById("proposalModal").style.display = "none";
     }
     
-    /* ===== 공유 기능 ===== */
+    /* ===== 공유 기능: 노트의 HTML을 URL 쿼리 파라미터로 공유 ===== */
     function shareChannel() {
-      const text = document.getElementById("notepad").innerText;
+      const noteContent = document.getElementById("notepad").innerHTML;
+      const encodedContent = encodeURIComponent(noteContent);
+      const shareURL = window.location.origin + window.location.pathname + "?share=" + encodedContent;
+      
       if (navigator.share) {
         navigator.share({
           title: 'Homerlex Shared Channel',
-          text: text
+          url: shareURL,
+          text: '현재 채널 내용을 공유합니다.'
         }).catch(err => console.error("공유 실패: ", err));
       } else if (navigator.clipboard) {
-        navigator.clipboard.writeText(text).then(() => {
-          alert("채널 내용이 클립보드에 복사되었습니다.");
-        }).catch(err => {
-          alert("복사 실패: " + err);
-        });
+        navigator.clipboard.writeText(shareURL)
+        .then(() => { alert("공유 URL이 클립보드에 복사되었습니다:\n" + shareURL); })
+        .catch(err => { alert("URL 복사 실패: " + err); });
       } else {
-        alert("이 브라우저는 공유 기능을 지원하지 않습니다.");
+        prompt("이 URL을 복사해서 다른 기기로 보내세요:", shareURL);
       }
     }
+    
+    window.addEventListener("DOMContentLoaded", function() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has("share")) {
+        const sharedContent = decodeURIComponent(params.get("share"));
+        document.getElementById("notepad").innerHTML = sharedContent;
+        saveActiveTabContent();
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+      loadActiveTabContent();
+    });
   </script>
 </body>
-</html>
+</html> 
