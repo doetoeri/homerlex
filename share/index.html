@@ -1,19 +1,18 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Homerlex – Shared Channel (Local Share via SimplePeer)</title>
-  <link rel="icon" type="image/png" href="icon.png">
-  
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Homerlex – Shared Channel (SimplePeer Simple Signals)</title>
+  <link rel="icon" type="image/png" href="icon.png" />
+
   <!-- Pretendard 폰트: 모든 글꼴을 Pretendard (Semibold)로 적용 -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard/dist/web/static/pretendard.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard/dist/web/static/pretendard.css" />
   <!-- Material Icons -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
   <!-- SimplePeer 라이브러리 -->
   <script src="https://unpkg.com/simple-peer@latest/simplepeer.min.js"></script>
-  
+
   <style>
     :root {
       --primary: #2196F3;
@@ -27,21 +26,19 @@
       --font-size: 16px;
       --button-padding: 0.5rem 0.75rem;
     }
-    
     body {
       font-family: var(--font-family);
       font-weight: 600;
       margin: 0;
       background-color: var(--background);
     }
-    
     /* 헤더: 로고와 사이트 타이틀 */
     header {
       display: flex;
       align-items: center;
       padding: 10px 20px;
       background-color: var(--surface);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       margin-bottom: 20px;
     }
     .logo {
@@ -51,7 +48,6 @@
     .site-title {
       font-size: 32px;
     }
-    
     /* 채널(탭) 영역 */
     #tabBar {
       display: flex;
@@ -102,7 +98,6 @@
       cursor: pointer;
       font-size: 28px;
     }
-    
     /* 노트패드 영역 */
     #notepadContainer {
       width: 80%;
@@ -125,7 +120,6 @@
       margin: 0;
       line-height: 1.5;
     }
-    
     /* 서식 툴바 영역 */
     #toolbar {
       display: flex;
@@ -167,8 +161,7 @@
     #toolbar input[type="color"]:hover {
       opacity: 0.85;
     }
-    
-    /* 추가 기능 툴바 – 기존 제안 보내기, 공유하기 버튼 외에 WebRTC 연결용 버튼 추가 */
+    /* 추가 기능 툴바 – 제안, 공유, 연결 관련 버튼들 */
     #extraToolbar {
       display: flex;
       flex-wrap: wrap;
@@ -186,7 +179,6 @@
       font-size: 16px;
       cursor: pointer;
     }
-    
     /* 제안 목록 패널 */
     #proposalsPanel {
       width: 80%;
@@ -228,7 +220,6 @@
       cursor: pointer;
       font-size: 14px;
     }
-    
     /* 모달 (제안 제출용) */
     .modal {
       display: none;
@@ -256,7 +247,6 @@
       font-size: var(--font-size);
       padding: 8px;
     }
-    
     @media screen and (max-width: 600px) {
       #notepadContainer { width: 100%; padding: 12px; }
       #toolbar, #extraToolbar { flex-direction: column; gap: 8px; }
@@ -266,10 +256,10 @@
 <body>
   <!-- 헤더: 로고와 사이트 타이틀 -->
   <header>
-    <img src="logo.png" alt="Homerlex Logo" class="logo">
+    <img src="logo.png" alt="Homerlex Logo" class="logo" />
     <div class="site-title">Homerlex</div>
   </header>
-  
+
   <!-- 채널(탭) 영역 -->
   <div id="tabBar" class="tab-container">
     <div class="tab" data-tab="1">
@@ -287,14 +277,14 @@
       <span class="material-icons">add</span>
     </button>
   </div>
-  
+
   <!-- 노트패드 영역 -->
   <div id="notepadContainer">
     <div id="notepad" contenteditable="true">
       <p>여기에 채널 내용을 입력하세요.</p>
     </div>
   </div>
-  
+
   <!-- 서식 툴바 영역 -->
   <div id="toolbar">
     <button class="format-btn" onclick="execCmd('bold')" title="굵게">
@@ -319,8 +309,8 @@
       <span class="material-icons">format_align_right</span>
     </button>
   </div>
-  
-  <!-- 추가 기능 툴바: 제안 보내기, 공유하기, 그리고 WebRTC 연결 용 (수동 신호) 버튼들 -->
+
+  <!-- 추가 기능 툴바: 제안 보내기, 공유하기, 연결 Offer, 답변 입력, 연결 Answer -->
   <div id="extraToolbar">
     <button onclick="openProposalModal()">제안 보내기</button>
     <button onclick="shareChannel()">공유하기</button>
@@ -328,37 +318,36 @@
     <button onclick="setAnswer()">답변 입력</button>
     <button onclick="startAnswer()">연결 Answer</button>
   </div>
-  
+
   <!-- 제안 목록 패널 -->
   <div id="proposalsPanel">
     <h3>제안 목록</h3>
     <ul id="proposalsList"></ul>
   </div>
-  
+
   <!-- 제안 모달 -->
   <div id="proposalModal" class="modal">
     <div class="modal-content">
       <h3>변경 제안 보내기</h3>
-      <textarea id="proposalText"></textarea><br>
+      <textarea id="proposalText"></textarea><br />
       <button onclick="submitProposal()">제안 보내기</button>
       <button onclick="closeProposalModal()">취소</button>
     </div>
   </div>
-  
+
   <script>
-    // ----- 기존 채널 노트 및 탭 관련 -----
+    /* ===== 기본 채널 노트 및 탭 기능 ===== */
     let activeTab = "1";
     const storageKeyPrefix = "notepad-content-";    
     const proposalsKeyPrefix = "channel-proposals-";
-    
+
     function saveActiveTabContent() {
       localStorage.setItem(storageKeyPrefix + activeTab, document.getElementById("notepad").innerHTML);
-      // 실시간 공유 중이면 전송
       if (peer && peer.connected) {
         peer.send(document.getElementById("notepad").innerHTML);
       }
     }
-    
+
     function loadActiveTabContent() {
       const params = new URLSearchParams(window.location.search);
       if (params.has("share")) {
@@ -373,20 +362,20 @@
       }
       renderProposals();
     }
-    
+
     function createTab(tabId, tabName) {
       const tabDiv = document.createElement("div");
       tabDiv.className = "tab";
       tabDiv.dataset.tab = tabId;
-      
+
       const labelSpan = document.createElement("span");
       labelSpan.className = "tab-label";
       labelSpan.textContent = tabName;
       tabDiv.appendChild(labelSpan);
-      
+
       const actionsDiv = document.createElement("div");
       actionsDiv.className = "tab-actions";
-      
+
       // 채널 이름 변경 버튼
       const renameBtn = document.createElement("button");
       renameBtn.className = "tab-rename";
@@ -400,7 +389,7 @@
         }
       });
       actionsDiv.appendChild(renameBtn);
-      
+
       // 채널 삭제 버튼
       const deleteBtn = document.createElement("button");
       deleteBtn.className = "tab-delete";
@@ -424,9 +413,8 @@
         }
       });
       actionsDiv.appendChild(deleteBtn);
-      
+
       tabDiv.appendChild(actionsDiv);
-      
       tabDiv.addEventListener("click", function() {
         saveActiveTabContent();
         document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
@@ -434,23 +422,21 @@
         activeTab = tabDiv.dataset.tab;
         loadActiveTabContent();
       });
-      
       return tabDiv;
     }
-    
+
     const tabBar = document.getElementById("tabBar");
     document.querySelectorAll(".tab").forEach(el => el.remove());
     const firstTab = createTab("1", "채널 1");
     firstTab.classList.add("active");
     tabBar.insertBefore(firstTab, document.getElementById("newTabBtn"));
-    
     document.getElementById("newTabBtn").addEventListener("click", function() {
       const tabs = document.querySelectorAll(".tab");
       const newId = (tabs.length + 1).toString();
       const newTab = createTab(newId, "채널 " + newId);
       tabBar.insertBefore(newTab, this);
     });
-    
+
     window.addEventListener("DOMContentLoaded", loadActiveTabContent);
     document.getElementById("notepad").addEventListener("input", function() {
       localStorage.setItem(storageKeyPrefix + activeTab, document.getElementById("notepad").innerHTML);
@@ -458,23 +444,23 @@
         peer.send(document.getElementById("notepad").innerHTML);
       }
     });
-    
+
     /* ===== 서식 기능 ===== */
     function execCmd(command) {
       document.execCommand(command, false, null);
     }
-    
+
     /* ===== 제안(Proposal) 기능 ===== */
     function getProposals() {
       const stored = localStorage.getItem(proposalsKeyPrefix + activeTab);
       return stored ? JSON.parse(stored) : [];
     }
-    
+
     function saveProposals(proposals) {
       localStorage.setItem(proposalsKeyPrefix + activeTab, JSON.stringify(proposals));
       renderProposals();
     }
-    
+
     function renderProposals() {
       const proposals = getProposals();
       const proposalsList = document.getElementById("proposalsList");
@@ -502,7 +488,7 @@
         proposalsList.appendChild(li);
       });
     }
-    
+
     function submitProposal() {
       const text = document.getElementById("proposalText").value;
       if (text.trim() === "") {
@@ -520,7 +506,7 @@
       saveProposals(proposals);
       closeProposalModal();
     }
-    
+
     function adoptProposal(proposalId) {
       const proposals = getProposals();
       const proposal = proposals.find(p => p.id === proposalId);
@@ -531,54 +517,56 @@
       saveProposals(updated);
       alert("제안이 채택되었습니다.");
     }
-    
+
     function rejectProposal(proposalId) {
       let proposals = getProposals();
       proposals = proposals.filter(p => p.id !== proposalId);
       saveProposals(proposals);
     }
-    
+
     /* ===== 모달 (제안 제출용) ===== */
     function openProposalModal() {
       document.getElementById("proposalText").value = document.getElementById("notepad").innerText;
       document.getElementById("proposalModal").style.display = "block";
     }
+
     function closeProposalModal() {
       document.getElementById("proposalModal").style.display = "none";
     }
-    
-    /* ===== 공유 기능: SimplePeer를 이용한 로컬 피어 연결 (수동 신호 교환) ===== */
+
+    /* ===== 공유 기능: SimplePeer 신호 교환 (Offer/Answer) – JSON 문자열로 직접 교환 ===== */
     let peer = null;
-    // Offer를 생성하는 함수 (연결 Offer 버튼)
+    // Offer 생성 (간단하게 JSON 문자열 출력)
     function startOffer() {
       peer = new SimplePeer({ initiator: true, trickle: false });
       peer.on('signal', data => {
-        alert("Offer Signal:\n" + JSON.stringify(data));
+        const offerSignal = JSON.stringify(data);
+        prompt("Offer Signal (복사해서 다른 기기로 보내세요):", offerSignal);
       });
       peer.on('connect', () => {
-        alert("연결이 완료되었습니다. 이제 노트 내용이 실시간 공유됩니다.");
+        alert("연결 완료: 변경 내용이 실시간 공유됩니다.");
       });
       peer.on('data', data => {
-        const receivedContent = data.toString();
-        document.getElementById("notepad").innerHTML = receivedContent;
+        const received = data.toString();
+        document.getElementById("notepad").innerHTML = received;
         saveActiveTabContent();
       });
     }
-    
-    // 답변을 입력하여 Offer어 쪽 피어에 전달 (Offer 쪽에서 사용)
+
+    // Offer 쪽에서 Answer 신호 입력받기
     function setAnswer() {
       const answerSignal = prompt("Answer Signal을 입력하세요:");
       if (answerSignal) {
         try {
           const answerData = JSON.parse(answerSignal);
           peer.signal(answerData);
-        } catch(e) {
-          alert("잘못된 입력입니다.");
+        } catch (e) {
+          alert("올바른 값을 입력하세요.");
         }
       }
     }
-    
-    // Answer 생성 함수 (연결 Answer 버튼)
+
+    // Answer 생성 (Offer 신호를 입력받아 답변 신호 생성)
     function startAnswer() {
       peer = new SimplePeer({ initiator: false, trickle: false });
       const offerSignal = prompt("Offer Signal을 입력하세요:");
@@ -586,24 +574,25 @@
         try {
           const offerData = JSON.parse(offerSignal);
           peer.signal(offerData);
-        } catch(e) {
-          alert("잘못된 입력입니다.");
+        } catch (e) {
+          alert("올바른 값을 입력하세요.");
           return;
         }
       }
       peer.on('signal', data => {
-        alert("Answer Signal:\n" + JSON.stringify(data));
+        const answerSignal = JSON.stringify(data);
+        prompt("Answer Signal (복사해서 Offer 쪽에 보내세요):", answerSignal);
       });
       peer.on('connect', () => {
-        alert("연결이 완료되었습니다. 이제 노트 내용이 실시간 공유됩니다.");
+        alert("연결 완료: 변경 내용이 실시간 공유됩니다.");
       });
       peer.on('data', data => {
-        const receivedContent = data.toString();
-        document.getElementById("notepad").innerHTML = receivedContent;
+        const received = data.toString();
+        document.getElementById("notepad").innerHTML = received;
         saveActiveTabContent();
       });
     }
-    
+
     window.addEventListener("DOMContentLoaded", function() {
       const params = new URLSearchParams(window.location.search);
       if (params.has("share")) {
