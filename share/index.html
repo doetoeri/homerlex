@@ -2,114 +2,329 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <!-- 모바일 최적화 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Homerlex Shared Channel</title>
+  <title>Homerlex – Shared Channel</title>
+  <link rel="icon" type="image/png" href="icon.png">
+  <!-- Google Fonts 및 Material Icons -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&family=Instrument+Serif&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0; padding: 0;
-      background-color: #F1F3F4;
+    :root {
+      --primary: #2196F3;
+      --on-primary: #000;
+      --surface: #ffffff;
+      --on-surface: #323130;
+      --background: #F1F3F4;
+      --corner-radius: 20px;
+      --font-family: 'Noto Sans', sans-serif;
+      --serif-font: 'Instrument Serif', serif;
+      --font-size: 16px;
+      --button-padding: 0.5rem 0.75rem;
     }
+    
+    /* 헤더 */
     header {
-      background-color: #ffffff;
-      padding: 10px;
-      text-align: center;
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: var(--surface);
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
     }
-    header h1 {
+    .logo {
+      max-width: 50px;
+      margin-right: 10px;
+    }
+    .site-title {
+      font-family: var(--serif-font);
+      font-size: 32px;
+      font-weight: bold;
+      color: #000;
+    }
+    
+    /* 채널(탭) 영역 – 기존 문서 탭 대신 채널로 사용 */
+    #tabBar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .tab {
+      display: flex;
+      align-items: center;
+      background-color: var(--surface);
+      border: 1px solid #ccc;
+      padding: 4px 8px;
+      border-radius: var(--corner-radius);
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .tab.active .tab-label {
+      background-color: var(--primary);
+      color: var(--on-primary);
+      padding: 4px 8px;
+      border-radius: var(--corner-radius);
+      font-weight: bold;
+    }
+    .tab .tab-label {
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: var(--corner-radius);
+    }
+    .tab .tab-actions {
+      display: flex;
+      gap: 4px;
+      margin-left: 4px;
+    }
+    .tab .tab-actions button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px;
+    }
+    .tab .tab-actions button:hover {
+      color: var(--primary);
+    }
+    .new-tab-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 28px;
+    }
+    
+    /* 노트패드 영역 */
+    #notepadContainer {
+      width: 80%;
+      max-width: 800px;
+      margin: 0 auto 20px;
+      border: 1px solid #ccc;
+      background-color: var(--surface);
+      border-radius: var(--corner-radius);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 20px;
+      overflow: hidden;
+    }
+    #notepad {
+      min-height: 400px;
+      outline: none;
+      word-wrap: break-word;
+      white-space: normal;
+    }
+    #notepad p {
       margin: 0;
-      font-size: 24px;
+      line-height: 1.5;
     }
-    #noteContainer {
-      width: 90%;
-      max-width: 800px;
-      margin: 20px auto;
-      background: #ffffff;
-      border: 1px solid #ccc;
-      padding: 15px;
-      min-height: 300px;
-    }
-    #note {
-      width: 100%;
-      min-height: 250px;
-    }
+    
+    /* 서식 툴바 영역 */
     #toolbar {
-      text-align: center;
-      margin: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px;
+      background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.2)), var(--primary);
+      background-blend-mode: multiply;
+      padding: 8px;
+      border-radius: var(--corner-radius);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+      color: var(--on-primary);
     }
-    #toolbar button {
-      padding: 10px 15px;
-      margin: 5px;
+    #toolbar button,
+    #toolbar select,
+    #toolbar input[type="color"] {
+      background: var(--primary);
+      border: none;
+      color: var(--on-primary);
+      padding: var(--button-padding);
+      margin: 2px;
+      cursor: pointer;
+      font-size: 24px;
+      border-radius: var(--corner-radius);
+    }
+    #toolbar select {
+      font-size: 14px;
+      background-color: #fff;
+      padding: 2px 4px;
+    }
+    #toolbar input[type="color"] {
+      width: 32px;
+      height: 32px;
+    }
+    #toolbar button:hover,
+    #toolbar select:hover,
+    #toolbar input[type="color"]:hover {
+      opacity: 0.85;
+    }
+    
+    /* 추가 기능 툴바 영역 (제안, 공유) */
+    #extraToolbar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin: 10px 0;
+    }
+    #extraToolbar button {
+      padding: 8px 12px;
+      border-radius: var(--corner-radius);
+      border: none;
+      background-color: var(--primary);
+      color: var(--on-primary);
       font-size: 16px;
+      cursor: pointer;
     }
+    #extraToolbar button:hover {
+      opacity: 0.85;
+    }
+    
+    /* 제안 목록 패널 */
     #proposalsPanel {
-      width: 90%;
+      width: 80%;
       max-width: 800px;
-      margin: 20px auto;
-      background: #ffffff;
+      margin: 0 auto 20px;
       border: 1px solid #ccc;
-      padding: 10px;
+      background-color: var(--surface);
+      border-radius: var(--corner-radius);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 12px;
       display: none;
     }
-    #proposalsPanel h2 {
-      margin-top: 0;
+    #proposalsPanel h3 {
+      margin: 0 0 10px;
+      font-family: var(--serif-font);
+      font-size: 20px;
     }
-    .proposalItem {
-      border-bottom: 1px solid #ddd;
-      padding: 5px 0;
+    #proposalsList {
+      list-style: none;
+      padding: 0;
+      margin: 0;
     }
-    .proposalItem button {
-      margin: 0 5px;
+    #proposalsList li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0;
+      border-bottom: 1px solid #ccc;
     }
-    /* Modal styling */
+    #proposalsList li:last-child {
+      border-bottom: none;
+    }
+    #proposalsList button {
+      padding: 4px 8px;
+      border: none;
+      border-radius: var(--corner-radius);
+      background-color: var(--primary);
+      color: var(--on-primary);
+      cursor: pointer;
+      font-size: 14px;
+    }
+    #proposalsList button:hover {
+      opacity: 0.85;
+    }
+    
+    /* 모달 (제안 제출용) */
     .modal {
-      display: none; 
+      display: none;
       position: fixed;
       z-index: 100;
       left: 0;
       top: 0;
       width: 100%;
       height: 100%;
-      overflow: auto; 
+      overflow: auto;
       background-color: rgba(0,0,0,0.4);
     }
     .modal-content {
-      background-color: #fefefe;
+      background-color: var(--surface);
       margin: 15% auto;
       padding: 20px;
       border: 1px solid #888;
       width: 80%;
       max-width: 500px;
+      border-radius: var(--corner-radius);
     }
     .modal textarea {
       width: 100%;
       height: 150px;
+      font-size: var(--font-size);
+      padding: 8px;
+    }
+    
+    @media screen and (max-width: 600px) {
+      #notepadContainer { width: 100%; padding: 12px; }
+      #toolbar, #extraToolbar { flex-direction: column; gap: 8px; }
     }
   </style>
 </head>
 <body>
+  <!-- 헤더 -->
   <header>
-    <h1>Homerlex Shared Channel</h1>
+    <img src="logo.png" alt="Homerlex Logo" class="logo">
+    <div class="site-title">Homerlex</div>
   </header>
   
-  <!-- 공유 채널 노트 영역 -->
-  <div id="noteContainer">
-    <div id="note" contenteditable="true">
+  <!-- 채널(탭) 영역 -->
+  <div id="tabBar" class="tab-container">
+    <div class="tab" data-tab="1">
+      <span class="tab-label">채널 1</span>
+      <div class="tab-actions">
+        <button class="tab-rename" title="채널 이름 변경">
+          <span class="material-icons" style="font-size:16px;">edit</span>
+        </button>
+        <button class="tab-delete" title="채널 삭제">
+          <span class="material-icons" style="font-size:16px;">delete</span>
+        </button>
+      </div>
+    </div>
+    <button class="new-tab-btn" id="newTabBtn">
+      <span class="material-icons">add</span>
+    </button>
+  </div>
+  
+  <!-- 노트패드 영역 -->
+  <div id="notepadContainer">
+    <div id="notepad" contenteditable="true">
       <p>여기에 채널 내용을 입력하세요.</p>
     </div>
   </div>
   
-  <!-- 툴바: 제안 보내기, 공유 -->
+  <!-- 서식 툴바 영역 -->
   <div id="toolbar">
+    <button class="format-btn" onclick="execCmd('bold')" title="굵게">
+      <span class="material-icons">format_bold</span>
+    </button>
+    <button class="format-btn" onclick="execCmd('italic')" title="이탤릭">
+      <span class="material-icons">format_italic</span>
+    </button>
+    <button class="format-btn" onclick="execCmd('underline')" title="밑줄">
+      <span class="material-icons">format_underlined</span>
+    </button>
+    <button class="format-btn" onclick="execCmd('strikeThrough')" title="취소선">
+      <span class="material-icons">strikethrough_s</span>
+    </button>
+    <button class="format-btn" onclick="execCmd('justifyLeft')" title="좌측 정렬">
+      <span class="material-icons">format_align_left</span>
+    </button>
+    <button class="format-btn" onclick="execCmd('justifyCenter')" title="중앙 정렬">
+      <span class="material-icons">format_align_center</span>
+    </button>
+    <button class="format-btn" onclick="execCmd('justifyRight')" title="우측 정렬">
+      <span class="material-icons">format_align_right</span>
+    </button>
+  </div>
+  
+  <!-- 추가 기능 툴바 (제안, 공유) -->
+  <div id="extraToolbar">
     <button onclick="openProposalModal()">제안 보내기</button>
     <button onclick="shareChannel()">공유</button>
   </div>
   
   <!-- 제안 목록 패널 -->
   <div id="proposalsPanel">
-    <h2>제안 목록</h2>
-    <div id="proposalsList"></div>
+    <h3>제안 목록</h3>
+    <ul id="proposalsList"></ul>
   </div>
   
   <!-- 제안 모달 -->
@@ -123,34 +338,123 @@
   </div>
   
   <script>
-    // Storage key 상수 설정
-    const noteKey = "sharedNote";
-    const proposalsKey = "channelProposals";
-  
-    // 공유 채널 노트를 로드 (저장된 내용이 없으면 기본값 사용)
-    function loadNote() {
-      const noteContent = localStorage.getItem(noteKey) || "<p>여기에 채널 내용을 입력하세요.</p>";
-      document.getElementById("note").innerHTML = noteContent;
+    /* ===== 기본 채널 노트 및 탭 저장 ===== */
+    let activeTab = "1";
+    const storageKeyPrefix = "notepad-content-";    
+    const proposalsKeyPrefix = "channel-proposals-";  // 채널별 제안 저장
+    
+    function saveActiveTabContent() {
+      localStorage.setItem(storageKeyPrefix + activeTab, document.getElementById("notepad").innerHTML);
     }
-    // 노트 저장
-    function saveNote() {
-      const content = document.getElementById("note").innerHTML;
-      localStorage.setItem(noteKey, content);
-    }
-    document.getElementById("note").addEventListener("input", saveNote);
-  
-    // 제안(Proposal) 배열 불러오기
-    function getProposals() {
-      const props = localStorage.getItem(proposalsKey);
-      return props ? JSON.parse(props) : [];
-    }
-    // 제안 배열 저장
-    function saveProposals(proposals) {
-      localStorage.setItem(proposalsKey, JSON.stringify(proposals));
+    
+    function loadActiveTabContent() {
+      const stored = localStorage.getItem(storageKeyPrefix + activeTab);
+      document.getElementById("notepad").innerHTML =
+        stored !== null ? stored : "<p>여기에 채널 내용을 입력하세요.</p>";
       renderProposals();
     }
-  
-    // 제안 목록 패널을 렌더링
+    
+    function createTab(tabId, tabName) {
+      const tabDiv = document.createElement("div");
+      tabDiv.className = "tab";
+      tabDiv.dataset.tab = tabId;
+      
+      const labelSpan = document.createElement("span");
+      labelSpan.className = "tab-label";
+      labelSpan.textContent = tabName;
+      tabDiv.appendChild(labelSpan);
+      
+      const actionsDiv = document.createElement("div");
+      actionsDiv.className = "tab-actions";
+      
+      // 채널 이름 변경 버튼
+      const renameBtn = document.createElement("button");
+      renameBtn.className = "tab-rename";
+      renameBtn.title = "채널 이름 변경";
+      renameBtn.innerHTML = '<span class="material-icons" style="font-size:16px;">edit</span>';
+      renameBtn.addEventListener("click", function(e) {
+        e.stopPropagation();
+        const newName = prompt("새 채널 이름을 입력하세요", labelSpan.textContent);
+        if (newName && newName.trim() !== "") {
+          labelSpan.textContent = newName.trim();
+        }
+      });
+      actionsDiv.appendChild(renameBtn);
+      
+      // 채널 삭제 버튼
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "tab-delete";
+      deleteBtn.title = "채널 삭제";
+      deleteBtn.innerHTML = '<span class="material-icons" style="font-size:16px;">delete</span>';
+      deleteBtn.addEventListener("click", function(e) {
+        e.stopPropagation();
+        if (confirm("이 채널을 삭제하시겠습니까?")) {
+          localStorage.removeItem(storageKeyPrefix + tabDiv.dataset.tab);
+          localStorage.removeItem(proposalsKeyPrefix + tabDiv.dataset.tab);
+          tabDiv.remove();
+          const remaining = document.querySelectorAll(".tab");
+          if (remaining.length > 0) {
+            activeTab = remaining[0].dataset.tab;
+            remaining[0].classList.add("active");
+            loadActiveTabContent();
+          } else {
+            activeTab = "1";
+            location.reload();
+          }
+        }
+      });
+      actionsDiv.appendChild(deleteBtn);
+      
+      tabDiv.appendChild(actionsDiv);
+      
+      tabDiv.addEventListener("click", function() {
+        saveActiveTabContent();
+        document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
+        tabDiv.classList.add("active");
+        activeTab = tabDiv.dataset.tab;
+        loadActiveTabContent();
+      });
+      
+      return tabDiv;
+    }
+    
+    const tabBar = document.getElementById("tabBar");
+    document.querySelectorAll(".tab").forEach(el => el.remove());
+    const firstTab = createTab("1", "채널 1");
+    firstTab.classList.add("active");
+    tabBar.insertBefore(firstTab, document.getElementById("newTabBtn"));
+    
+    document.getElementById("newTabBtn").addEventListener("click", function() {
+      const tabs = document.querySelectorAll(".tab");
+      const newId = (tabs.length + 1).toString();
+      const newTab = createTab(newId, "채널 " + newId);
+      tabBar.insertBefore(newTab, this);
+    });
+    
+    window.addEventListener("DOMContentLoaded", loadActiveTabContent);
+    document.getElementById("notepad").addEventListener("input", function() {
+      localStorage.setItem(storageKeyPrefix + activeTab, document.getElementById("notepad").innerHTML);
+    });
+    
+    /* ===== 서식 기능 ===== */
+    function execCmd(command) {
+      document.execCommand(command, false, null);
+    }
+    
+    /* ===== 제안(Proposal) 기능 ===== */
+    // 제안 배열 불러오기 (채널별로)
+    function getProposals() {
+      const stored = localStorage.getItem(proposalsKeyPrefix + activeTab);
+      return stored ? JSON.parse(stored) : [];
+    }
+    
+    // 제안 배열 저장 (채널별로)
+    function saveProposals(proposals) {
+      localStorage.setItem(proposalsKeyPrefix + activeTab, JSON.stringify(proposals));
+      renderProposals();
+    }
+    
+    // 제안 목록 패널 렌더링
     function renderProposals() {
       const proposals = getProposals();
       const proposalsList = document.getElementById("proposalsList");
@@ -161,30 +465,27 @@
       }
       document.getElementById("proposalsPanel").style.display = "block";
       proposals.forEach(proposal => {
-        const div = document.createElement("div");
-        div.className = "proposalItem";
-        div.innerHTML = `<strong>${proposal.author || "익명"}</strong> (${new Date(proposal.timestamp).toLocaleString()}): ${proposal.content}`;
-  
+        const li = document.createElement("li");
+        li.innerHTML = `<strong>${proposal.author || "익명"}</strong> (${new Date(proposal.timestamp).toLocaleString()}): ${proposal.content}`;
         // 채택 버튼
         const adoptBtn = document.createElement("button");
         adoptBtn.textContent = "채택";
-        adoptBtn.onclick = function() {
+        adoptBtn.addEventListener("click", function() {
           adoptProposal(proposal.id);
-        };
+        });
         // 거절 버튼
         const rejectBtn = document.createElement("button");
         rejectBtn.textContent = "거절";
-        rejectBtn.onclick = function() {
+        rejectBtn.addEventListener("click", function() {
           rejectProposal(proposal.id);
-        };
-  
-        div.appendChild(adoptBtn);
-        div.appendChild(rejectBtn);
-        proposalsList.appendChild(div);
+        });
+        li.appendChild(adoptBtn);
+        li.appendChild(rejectBtn);
+        proposalsList.appendChild(li);
       });
     }
-  
-    // 제안 제출 - 모달에서 내용 받아 제안 객체 생성
+    
+    // 제안 제출 (모달에서)
     function submitProposal() {
       const text = document.getElementById("proposalText").value;
       if (text.trim() === "") {
@@ -192,7 +493,7 @@
         return;
       }
       const proposal = {
-        id: Date.now(), // 간단히 timestamp를 id로 사용
+        id: Date.now(), // 고유 ID (간단하게 timestamp 사용)
         author: prompt("작성자 이름을 입력하세요:", "익명") || "익명",
         timestamp: Date.now(),
         content: text.trim()
@@ -202,43 +503,44 @@
       saveProposals(proposals);
       closeProposalModal();
     }
-  
-    // 채택: 제안 내용을 채널 노트로 업데이트한 후 제안 삭제
+    
+    // 채택: 제안 내용을 채널 노트로 업데이트
     function adoptProposal(proposalId) {
       const proposals = getProposals();
       const proposal = proposals.find(p => p.id === proposalId);
       if (!proposal) return;
-      document.getElementById("note").innerHTML = proposal.content;
-      saveNote();
+      document.getElementById("notepad").innerHTML = proposal.content;
+      saveActiveTabContent();
       const updated = proposals.filter(p => p.id !== proposalId);
       saveProposals(updated);
       alert("제안이 채택되었습니다.");
     }
-    // 거절: 제안 목록에서 제거
+    
+    // 거절: 제안 목록에서 삭제
     function rejectProposal(proposalId) {
       let proposals = getProposals();
       proposals = proposals.filter(p => p.id !== proposalId);
       saveProposals(proposals);
     }
-  
-    // 모달 열기/닫기 함수
+    
+    /* ===== 모달 (제안 제출용) ===== */
     function openProposalModal() {
-      // 제안 모달의 textarea에 현재 노트 텍스트(plain text)를 기본값으로 설정
-      document.getElementById("proposalText").value = document.getElementById("note").innerText;
+      // 모달 textarea에 현재 노트 평문을 기본값으로 설정
+      document.getElementById("proposalText").value = document.getElementById("notepad").innerText;
       document.getElementById("proposalModal").style.display = "block";
     }
     function closeProposalModal() {
       document.getElementById("proposalModal").style.display = "none";
     }
-  
-    // 공유 기능: Web Share API(지원 시) 또는 클립보드 복사
+    
+    /* ===== 공유 기능 ===== */
     function shareChannel() {
-      const text = document.getElementById("note").innerText;
+      const text = document.getElementById("notepad").innerText;
       if (navigator.share) {
         navigator.share({
-          title: "Homerlex Shared Channel",
+          title: 'Homerlex Shared Channel',
           text: text
-        }).catch(console.error);
+        }).catch(err => console.error("공유 실패: ", err));
       } else if (navigator.clipboard) {
         navigator.clipboard.writeText(text).then(() => {
           alert("채널 내용이 클립보드에 복사되었습니다.");
@@ -248,12 +550,6 @@
       } else {
         alert("이 브라우저는 공유 기능을 지원하지 않습니다.");
       }
-    }
-  
-    // 초기화: 노트와 제안 목록 불러오기
-    window.onload = function() {
-      loadNote();
-      renderProposals();
     }
   </script>
 </body>
