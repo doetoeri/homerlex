@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <!-- 모바일 최적화 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Homerlex Shared Channel</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0; padding: 0;
+      background-color: #F1F3F4;
+    }
+    header {
+      background-color: #ffffff;
+      padding: 10px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+    #noteContainer {
+      width: 90%;
+      max-width: 800px;
+      margin: 20px auto;
+      background: #ffffff;
+      border: 1px solid #ccc;
+      padding: 15px;
+      min-height: 300px;
+    }
+    #note {
+      width: 100%;
+      min-height: 250px;
+    }
+    #toolbar {
+      text-align: center;
+      margin: 10px;
+    }
+    #toolbar button {
+      padding: 10px 15px;
+      margin: 5px;
+      font-size: 16px;
+    }
+    #proposalsPanel {
+      width: 90%;
+      max-width: 800px;
+      margin: 20px auto;
+      background: #ffffff;
+      border: 1px solid #ccc;
+      padding: 10px;
+      display: none;
+    }
+    #proposalsPanel h2 {
+      margin-top: 0;
+    }
+    .proposalItem {
+      border-bottom: 1px solid #ddd;
+      padding: 5px 0;
+    }
+    .proposalItem button {
+      margin: 0 5px;
+    }
+    /* Modal styling */
+    .modal {
+      display: none; 
+      position: fixed;
+      z-index: 100;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto; 
+      background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 500px;
+    }
+    .modal textarea {
+      width: 100%;
+      height: 150px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Homerlex Shared Channel</h1>
+  </header>
+  
+  <!-- 공유 채널 노트 영역 -->
+  <div id="noteContainer">
+    <div id="note" contenteditable="true">
+      <p>여기에 채널 내용을 입력하세요.</p>
+    </div>
+  </div>
+  
+  <!-- 툴바: 제안 보내기, 공유 -->
+  <div id="toolbar">
+    <button onclick="openProposalModal()">제안 보내기</button>
+    <button onclick="shareChannel()">공유</button>
+  </div>
+  
+  <!-- 제안 목록 패널 -->
+  <div id="proposalsPanel">
+    <h2>제안 목록</h2>
+    <div id="proposalsList"></div>
+  </div>
+  
+  <!-- 제안 모달 -->
+  <div id="proposalModal" class="modal">
+    <div class="modal-content">
+      <h3>변경 제안 보내기</h3>
+      <textarea id="proposalText"></textarea><br>
+      <button onclick="submitProposal()">제안 보내기</button>
+      <button onclick="closeProposalModal()">취소</button>
+    </div>
+  </div>
+  
+  <script>
+    // Storage key 상수 설정
+    const noteKey = "sharedNote";
+    const proposalsKey = "channelProposals";
+  
+    // 공유 채널 노트를 로드 (저장된 내용이 없으면 기본값 사용)
+    function loadNote() {
+      const noteContent = localStorage.getItem(noteKey) || "<p>여기에 채널 내용을 입력하세요.</p>";
+      document.getElementById("note").innerHTML = noteContent;
+    }
+    // 노트 저장
+    function saveNote() {
+      const content = document.getElementById("note").innerHTML;
+      localStorage.setItem(noteKey, content);
+    }
+    document.getElementById("note").addEventListener("input", saveNote);
+  
+    // 제안(Proposal) 배열 불러오기
+    function getProposals() {
+      const props = localStorage.getItem(proposalsKey);
+      return props ? JSON.parse(props) : [];
+    }
+    // 제안 배열 저장
+    function saveProposals(proposals) {
+      localStorage.setItem(proposalsKey, JSON.stringify(proposals));
+      renderProposals();
+    }
+  
+    // 제안 목록 패널을 렌더링
+    function renderProposals() {
+      const proposals = getProposals();
+      const proposalsList = document.getElementById("proposalsList");
+      proposalsList.innerHTML = "";
+      if (proposals.length === 0) {
+        document.getElementById("proposalsPanel").style.display = "none";
+        return;
+      }
+      document.getElementById("proposalsPanel").style.display = "block";
+      proposals.forEach(proposal => {
+        const div = document.createElement("div");
+        div.className = "proposalItem";
+        div.innerHTML = `<strong>${proposal.author || "익명"}</strong> (${new Date(proposal.timestamp).toLocaleString()}): ${proposal.content}`;
+  
+        // 채택 버튼
+        const adoptBtn = document.createElement("button");
+        adoptBtn.textContent = "채택";
+        adoptBtn.onclick = function() {
+          adoptProposal(proposal.id);
+        };
+        // 거절 버튼
+        const rejectBtn = document.createElement("button");
+        rejectBtn.textContent = "거절";
+        rejectBtn.onclick = function() {
+          rejectProposal(proposal.id);
+        };
+  
+        div.appendChild(adoptBtn);
+        div.appendChild(rejectBtn);
+        proposalsList.appendChild(div);
+      });
+    }
+  
+    // 제안 제출 - 모달에서 내용 받아 제안 객체 생성
+    function submitProposal() {
+      const text = document.getElementById("proposalText").value;
+      if (text.trim() === "") {
+        alert("제안 내용을 입력해주세요.");
+        return;
+      }
+      const proposal = {
+        id: Date.now(), // 간단히 timestamp를 id로 사용
+        author: prompt("작성자 이름을 입력하세요:", "익명") || "익명",
+        timestamp: Date.now(),
+        content: text.trim()
+      };
+      const proposals = getProposals();
+      proposals.push(proposal);
+      saveProposals(proposals);
+      closeProposalModal();
+    }
+  
+    // 채택: 제안 내용을 채널 노트로 업데이트한 후 제안 삭제
+    function adoptProposal(proposalId) {
+      const proposals = getProposals();
+      const proposal = proposals.find(p => p.id === proposalId);
+      if (!proposal) return;
+      document.getElementById("note").innerHTML = proposal.content;
+      saveNote();
+      const updated = proposals.filter(p => p.id !== proposalId);
+      saveProposals(updated);
+      alert("제안이 채택되었습니다.");
+    }
+    // 거절: 제안 목록에서 제거
+    function rejectProposal(proposalId) {
+      let proposals = getProposals();
+      proposals = proposals.filter(p => p.id !== proposalId);
+      saveProposals(proposals);
+    }
+  
+    // 모달 열기/닫기 함수
+    function openProposalModal() {
+      // 제안 모달의 textarea에 현재 노트 텍스트(plain text)를 기본값으로 설정
+      document.getElementById("proposalText").value = document.getElementById("note").innerText;
+      document.getElementById("proposalModal").style.display = "block";
+    }
+    function closeProposalModal() {
+      document.getElementById("proposalModal").style.display = "none";
+    }
+  
+    // 공유 기능: Web Share API(지원 시) 또는 클립보드 복사
+    function shareChannel() {
+      const text = document.getElementById("note").innerText;
+      if (navigator.share) {
+        navigator.share({
+          title: "Homerlex Shared Channel",
+          text: text
+        }).catch(console.error);
+      } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+          alert("채널 내용이 클립보드에 복사되었습니다.");
+        }).catch(err => {
+          alert("복사 실패: " + err);
+        });
+      } else {
+        alert("이 브라우저는 공유 기능을 지원하지 않습니다.");
+      }
+    }
+  
+    // 초기화: 노트와 제안 목록 불러오기
+    window.onload = function() {
+      loadNote();
+      renderProposals();
+    }
+  </script>
+</body>
+</html>
