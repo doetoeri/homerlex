@@ -3,65 +3,64 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Homerlex – Shared Channel (SimplePeer Simple Signals)</title>
+  <title>Homerlex – Word Processor</title>
   <link rel="icon" type="image/png" href="icon.png" />
-
-  <!-- Pretendard 폰트: 모든 글꼴을 Pretendard (Semibold)로 적용 -->
+  <!-- Pretendard 폰트 (세미볼드 적용) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard/dist/web/static/pretendard.css" />
   <!-- Material Icons -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
-  <!-- SimplePeer 라이브러리 -->
-  <script src="https://unpkg.com/simple-peer@latest/simplepeer.min.js"></script>
 
   <style>
     :root {
       --primary: #2196F3;
-      --on-primary: #000;
+      --on-primary: #ffffff;
       --surface: #ffffff;
       --on-surface: #323130;
       --background: #F1F3F4;
       --corner-radius: 20px;
       --font-family: 'Pretendard', sans-serif;
-      --serif-font: 'Pretendard', sans-serif;
       --font-size: 16px;
-      --button-padding: 0.5rem 0.75rem;
+      --button-padding: 0.75rem 1rem;
+      --icon-size: 28px;
     }
     body {
       font-family: var(--font-family);
       font-weight: 600;
       margin: 0;
       background-color: var(--background);
+      color: var(--on-surface);
     }
-    /* 헤더: 로고와 사이트 타이틀 */
+    /* 헤더: 로고와 사이트 타이틀 (심플하고 좌우 패딩 넉넉하게) */
     header {
       display: flex;
       align-items: center;
-      padding: 10px 20px;
+      padding: 16px 24px;
       background-color: var(--surface);
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
     .logo {
-      max-width: 50px;
-      margin-right: 10px;
+      width: 50px;
+      height: 50px;
+      margin-right: 16px;
     }
     .site-title {
-      font-size: 32px;
+      font-size: 36px;
     }
-    /* 채널(탭) 영역 */
+    /* 탭 영역 */
     #tabBar {
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       gap: 8px;
-      margin-bottom: 10px;
+      margin: 0 24px 16px;
     }
     .tab {
       display: flex;
       align-items: center;
       background-color: var(--surface);
       border: 1px solid #ccc;
-      padding: 4px 8px;
+      padding: 8px 12px;
       border-radius: var(--corner-radius);
       cursor: pointer;
       transition: background-color 0.3s;
@@ -69,13 +68,12 @@
     .tab.active .tab-label {
       background-color: var(--primary);
       color: var(--on-primary);
-      padding: 4px 8px;
+      padding: 8px 12px;
       border-radius: var(--corner-radius);
       font-weight: bold;
     }
     .tab .tab-label {
-      cursor: pointer;
-      padding: 4px 8px;
+      padding: 8px 12px;
       border-radius: var(--corner-radius);
     }
     .tab-actions {
@@ -87,7 +85,7 @@
       background: none;
       border: none;
       cursor: pointer;
-      padding: 2px;
+      padding: 4px;
     }
     .tab-actions button:hover {
       color: var(--primary);
@@ -96,103 +94,100 @@
       background: none;
       border: none;
       cursor: pointer;
-      font-size: 28px;
+      font-size: var(--icon-size);
+      padding: 8px;
     }
     /* 노트패드 영역 */
     #notepadContainer {
-      width: 80%;
-      max-width: 800px;
-      margin: 0 auto 20px;
+      width: 90%;
+      max-width: 900px;
+      margin: 0 auto 24px;
       border: 1px solid #ccc;
       background-color: var(--surface);
       border-radius: var(--corner-radius);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      padding: 20px;
-      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 24px;
     }
     #notepad {
       min-height: 400px;
       outline: none;
       word-wrap: break-word;
-      white-space: normal;
+      white-space: pre-wrap;
+      font-size: var(--font-size);
     }
-    #notepad p {
-      margin: 0;
-      line-height: 1.5;
-    }
-    /* 서식 툴바 영역 */
+    /* 서식 툴바 (큰 아이콘 위주의 버튼들) */
     #toolbar {
       display: flex;
-      flex-wrap: wrap;
       justify-content: center;
       align-items: center;
       gap: 12px;
-      margin-top: 10px;
-      background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.2)), var(--primary);
-      background-blend-mode: multiply;
-      padding: 8px;
+      margin: 0 auto 24px;
+      padding: 12px;
+      background-color: var(--primary);
       border-radius: var(--corner-radius);
       box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-      color: var(--on-primary);
     }
-    #toolbar button,
-    #toolbar select,
-    #toolbar input[type="color"] {
-      background: var(--primary);
+    #toolbar button {
+      background: none;
       border: none;
       color: var(--on-primary);
-      padding: var(--button-padding);
-      margin: 2px;
+      font-size: var(--icon-size);
       cursor: pointer;
-      font-size: 24px;
-      border-radius: var(--corner-radius);
+      padding: 8px;
+      border-radius: 50%;
+      transition: background-color 0.3s;
     }
-    #toolbar select {
-      font-size: 14px;
-      background-color: #fff;
-      padding: 2px 4px;
+    #toolbar button:hover {
+      background-color: rgba(255, 255, 255, 0.3);
     }
-    #toolbar input[type="color"] {
-      width: 32px;
-      height: 32px;
+    /* 텍스트 버튼 변환 전용 버튼 (아이콘 + 큰 라운드) */
+    #convertBtn {
+      background-color: var(--primary);
+      border: none;
+      color: var(--on-primary);
+      font-size: var(--icon-size);
+      padding: 8px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: background-color 0.3s;
     }
-    #toolbar button:hover,
-    #toolbar select:hover,
-    #toolbar input[type="color"]:hover {
-      opacity: 0.85;
+    #convertBtn:hover {
+      background-color: rgba(255, 255, 255, 0.3);
     }
-    /* 추가 기능 툴바 – 제안, 공유, 연결 관련 버튼들 */
+    /* 추가 기능 툴바: 제안 보내기 및 공유하기 - 간결하게 */
     #extraToolbar {
       display: flex;
-      flex-wrap: wrap;
       justify-content: center;
       align-items: center;
-      gap: 12px;
-      margin: 10px 0;
+      gap: 16px;
+      margin: 0 auto 24px;
     }
     #extraToolbar button {
-      padding: 8px 12px;
-      border-radius: var(--corner-radius);
-      border: none;
       background-color: var(--primary);
+      border: none;
       color: var(--on-primary);
       font-size: 16px;
+      padding: 10px 16px;
+      border-radius: var(--corner-radius);
       cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    #extraToolbar button:hover {
+      background-color: rgba(33,150,243,0.8);
     }
     /* 제안 목록 패널 */
     #proposalsPanel {
-      width: 80%;
-      max-width: 800px;
-      margin: 0 auto 20px;
-      border: 1px solid #ccc;
+      width: 90%;
+      max-width: 900px;
+      margin: 0 auto 24px;
+      padding: 16px;
       background-color: var(--surface);
       border-radius: var(--corner-radius);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      padding: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       display: none;
     }
     #proposalsPanel h3 {
-      margin: 0 0 10px;
+      margin: 0 0 12px;
       font-size: 20px;
       font-family: var(--serif-font);
     }
@@ -205,74 +200,66 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 4px 0;
-      border-bottom: 1px solid #ccc;
+      padding: 8px 0;
+      border-bottom: 1px solid #ddd;
     }
     #proposalsList li:last-child {
       border-bottom: none;
     }
     #proposalsList button {
-      padding: 4px 8px;
-      border: none;
-      border-radius: var(--corner-radius);
       background-color: var(--primary);
+      border: none;
       color: var(--on-primary);
-      cursor: pointer;
       font-size: 14px;
+      padding: 6px 12px;
+      border-radius: var(--corner-radius);
+      cursor: pointer;
+      transition: background-color 0.3s;
     }
-    /* 모달 (제안 제출용) */
+    #proposalsList button:hover {
+      background-color: rgba(33,150,243,0.8);
+    }
+    /* 제안 모달 */
     .modal {
       display: none;
       position: fixed;
-      z-index: 100;
+      z-index: 200;
       left: 0;
       top: 0;
       width: 100%;
       height: 100%;
-      overflow: auto;
       background-color: rgba(0,0,0,0.4);
     }
     .modal-content {
       background-color: var(--surface);
       margin: 15% auto;
-      padding: 20px;
-      border: 1px solid #888;
-      width: 80%;
-      max-width: 500px;
+      padding: 24px;
       border-radius: var(--corner-radius);
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
-    .modal textarea {
+    .modal-content textarea {
       width: 100%;
       height: 150px;
       font-size: var(--font-size);
-      padding: 8px;
-    }
-    @media screen and (max-width: 600px) {
-      #notepadContainer { width: 100%; padding: 12px; }
-      #toolbar, #extraToolbar { flex-direction: column; gap: 8px; }
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: var(--corner-radius);
+      resize: vertical;
     }
   </style>
 </head>
 <body>
-  <!-- 헤더: 로고와 사이트 타이틀 -->
+  <!-- 헤더 -->
   <header>
     <img src="logo.png" alt="Homerlex Logo" class="logo" />
     <div class="site-title">Homerlex</div>
   </header>
 
-  <!-- 채널(탭) 영역 -->
-  <div id="tabBar" class="tab-container">
-    <div class="tab" data-tab="1">
-      <span class="tab-label">채널 1</span>
-      <div class="tab-actions">
-        <button class="tab-rename" title="채널 이름 변경">
-          <span class="material-icons" style="font-size:16px;">edit</span>
-        </button>
-        <button class="tab-delete" title="채널 삭제">
-          <span class="material-icons" style="font-size:16px;">delete</span>
-        </button>
-      </div>
-    </div>
+  <!-- 탭 영역 -->
+  <div id="tabBar">
+    <!-- 탭은 JS로 생성; 기본적으로 Document 1 -->
     <button class="new-tab-btn" id="newTabBtn">
       <span class="material-icons">add</span>
     </button>
@@ -281,42 +268,42 @@
   <!-- 노트패드 영역 -->
   <div id="notepadContainer">
     <div id="notepad" contenteditable="true">
-      <p>여기에 채널 내용을 입력하세요.</p>
+      <p>여기에 내용을 입력하세요.</p>
     </div>
   </div>
 
-  <!-- 서식 툴바 영역 -->
+  <!-- 서식 툴바 -->
   <div id="toolbar">
-    <button class="format-btn" onclick="execCmd('bold')" title="굵게">
+    <button onclick="execCmd('bold')" title="굵게">
       <span class="material-icons">format_bold</span>
     </button>
-    <button class="format-btn" onclick="execCmd('italic')" title="이탤릭">
+    <button onclick="execCmd('italic')" title="이탤릭">
       <span class="material-icons">format_italic</span>
     </button>
-    <button class="format-btn" onclick="execCmd('underline')" title="밑줄">
+    <button onclick="execCmd('underline')" title="밑줄">
       <span class="material-icons">format_underlined</span>
     </button>
-    <button class="format-btn" onclick="execCmd('strikeThrough')" title="취소선">
+    <button onclick="execCmd('strikeThrough')" title="취소선">
       <span class="material-icons">strikethrough_s</span>
     </button>
-    <button class="format-btn" onclick="execCmd('justifyLeft')" title="좌측 정렬">
+    <button onclick="execCmd('justifyLeft')" title="좌측 정렬">
       <span class="material-icons">format_align_left</span>
     </button>
-    <button class="format-btn" onclick="execCmd('justifyCenter')" title="중앙 정렬">
+    <button onclick="execCmd('justifyCenter')" title="중앙 정렬">
       <span class="material-icons">format_align_center</span>
     </button>
-    <button class="format-btn" onclick="execCmd('justifyRight')" title="우측 정렬">
+    <button onclick="execCmd('justifyRight')" title="우측 정렬">
       <span class="material-icons">format_align_right</span>
+    </button>
+    <button id="convertBtn" onclick="convertSelectedText()" title="텍스트 버튼 적용">
+      <span class="material-icons">smart_button</span>
     </button>
   </div>
 
-  <!-- 추가 기능 툴바: 제안 보내기, 공유하기, 연결 Offer, 답변 입력, 연결 Answer -->
+  <!-- 추가 기능 툴바 -->
   <div id="extraToolbar">
     <button onclick="openProposalModal()">제안 보내기</button>
     <button onclick="shareChannel()">공유하기</button>
-    <button onclick="startOffer()">연결 Offer</button>
-    <button onclick="setAnswer()">답변 입력</button>
-    <button onclick="startAnswer()">연결 Answer</button>
   </div>
 
   <!-- 제안 목록 패널 -->
@@ -329,23 +316,22 @@
   <div id="proposalModal" class="modal">
     <div class="modal-content">
       <h3>변경 제안 보내기</h3>
-      <textarea id="proposalText"></textarea><br />
-      <button onclick="submitProposal()">제안 보내기</button>
-      <button onclick="closeProposalModal()">취소</button>
+      <textarea id="proposalText"></textarea>
+      <div style="text-align:center; margin-top:16px;">
+        <button onclick="submitProposal()">제안 보내기</button>
+        <button onclick="closeProposalModal()" style="margin-left:8px;">취소</button>
+      </div>
     </div>
   </div>
 
   <script>
-    /* ===== 기본 채널 노트 및 탭 기능 ===== */
+    /* ===== 탭 관리 기능 ===== */
     let activeTab = "1";
-    const storageKeyPrefix = "notepad-content-";    
+    const storageKeyPrefix = "notepad-content-";
     const proposalsKeyPrefix = "channel-proposals-";
 
     function saveActiveTabContent() {
       localStorage.setItem(storageKeyPrefix + activeTab, document.getElementById("notepad").innerHTML);
-      if (peer && peer.connected) {
-        peer.send(document.getElementById("notepad").innerHTML);
-      }
     }
 
     function loadActiveTabContent() {
@@ -358,7 +344,7 @@
       } else {
         const stored = localStorage.getItem(storageKeyPrefix + activeTab);
         document.getElementById("notepad").innerHTML =
-          stored !== null ? stored : "<p>여기에 채널 내용을 입력하세요.</p>";
+          stored !== null ? stored : "<p>여기에 내용을 입력하세요.</p>";
       }
       renderProposals();
     }
@@ -376,25 +362,23 @@
       const actionsDiv = document.createElement("div");
       actionsDiv.className = "tab-actions";
 
-      // 채널 이름 변경 버튼
       const renameBtn = document.createElement("button");
       renameBtn.className = "tab-rename";
       renameBtn.title = "채널 이름 변경";
-      renameBtn.innerHTML = '<span class="material-icons" style="font-size:16px;">edit</span>';
+      renameBtn.innerHTML = '<span class="material-icons" style="font-size:20px;">edit</span>';
       renameBtn.addEventListener("click", function(e) {
         e.stopPropagation();
-        const newName = prompt("새 채널 이름을 입력하세요", labelSpan.textContent);
+        const newName = prompt("새 채널 이름:", labelSpan.textContent);
         if (newName && newName.trim() !== "") {
           labelSpan.textContent = newName.trim();
         }
       });
       actionsDiv.appendChild(renameBtn);
 
-      // 채널 삭제 버튼
       const deleteBtn = document.createElement("button");
       deleteBtn.className = "tab-delete";
       deleteBtn.title = "채널 삭제";
-      deleteBtn.innerHTML = '<span class="material-icons" style="font-size:16px;">delete</span>';
+      deleteBtn.innerHTML = '<span class="material-icons" style="font-size:20px;">delete</span>';
       deleteBtn.addEventListener("click", function(e) {
         e.stopPropagation();
         if (confirm("이 채널을 삭제하시겠습니까?")) {
@@ -425,31 +409,56 @@
       return tabDiv;
     }
 
-    const tabBar = document.getElementById("tabBar");
-    document.querySelectorAll(".tab").forEach(el => el.remove());
-    const firstTab = createTab("1", "채널 1");
-    firstTab.classList.add("active");
-    tabBar.insertBefore(firstTab, document.getElementById("newTabBtn"));
+    function initTabs() {
+      const tabBar = document.getElementById("tabBar");
+      // Clear existing tabs (if any) except the new-tab button
+      const existingTabs = document.querySelectorAll("#tabBar .tab");
+      existingTabs.forEach(tab => tab.remove());
+      // Create default tab if none exists
+      if (!localStorage.getItem(storageKeyPrefix + "1")) {
+        localStorage.setItem(storageKeyPrefix + "1", "<p>여기에 내용을 입력하세요.</p>");
+      }
+      const defaultTab = createTab("1", "채널 1");
+      defaultTab.classList.add("active");
+      tabBar.insertBefore(defaultTab, document.getElementById("newTabBtn"));
+    }
+
     document.getElementById("newTabBtn").addEventListener("click", function() {
-      const tabs = document.querySelectorAll(".tab");
+      const tabs = document.querySelectorAll("#tabBar .tab");
       const newId = (tabs.length + 1).toString();
       const newTab = createTab(newId, "채널 " + newId);
-      tabBar.insertBefore(newTab, this);
+      document.getElementById("tabBar").insertBefore(newTab, this);
     });
 
     window.addEventListener("DOMContentLoaded", loadActiveTabContent);
+
     document.getElementById("notepad").addEventListener("input", function() {
       localStorage.setItem(storageKeyPrefix + activeTab, document.getElementById("notepad").innerHTML);
-      if (peer && peer.connected) {
-        peer.send(document.getElementById("notepad").innerHTML);
-      }
     });
 
     /* ===== 서식 기능 ===== */
-    function execCmd(command) {
-      document.execCommand(command, false, null);
+    function execCmd(cmd) {
+      document.execCommand(cmd, false, null);
     }
 
+    /* ===== 텍스트 버튼 변환 기능 ===== */
+    function convertSelectedText() {
+      const sel = window.getSelection();
+      if (sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+      const text = range.toString().trim();
+      if (!text) return;
+      // 생성할 버튼 요소
+      const btn = document.createElement("button");
+      btn.className = "highlight-btn";
+      btn.textContent = text;
+      btn.onclick = function(e) { e.stopPropagation(); alert("버튼: " + this.textContent); };
+      range.deleteContents();
+      range.insertNode(btn);
+      sel.removeAllRanges();
+      document.getElementById("notepad").dispatchEvent(new Event("input"));
+    }
+    
     /* ===== 제안(Proposal) 기능 ===== */
     function getProposals() {
       const stored = localStorage.getItem(proposalsKeyPrefix + activeTab);
@@ -475,14 +484,10 @@
         li.innerHTML = `<strong>${proposal.author || "익명"}</strong> (${new Date(proposal.timestamp).toLocaleString()}): ${proposal.content}`;
         const adoptBtn = document.createElement("button");
         adoptBtn.textContent = "채택";
-        adoptBtn.addEventListener("click", function() {
-          adoptProposal(proposal.id);
-        });
+        adoptBtn.onclick = function() { adoptProposal(proposal.id); };
         const rejectBtn = document.createElement("button");
         rejectBtn.textContent = "거절";
-        rejectBtn.addEventListener("click", function() {
-          rejectProposal(proposal.id);
-        });
+        rejectBtn.onclick = function() { rejectProposal(proposal.id); };
         li.appendChild(adoptBtn);
         li.appendChild(rejectBtn);
         proposalsList.appendChild(li);
@@ -497,7 +502,7 @@
       }
       const proposal = {
         id: Date.now(),
-        author: prompt("작성자 이름을 입력하세요:", "익명") || "익명",
+        author: prompt("작성자 이름:", "익명") || "익명",
         timestamp: Date.now(),
         content: text.trim()
       };
@@ -524,7 +529,6 @@
       saveProposals(proposals);
     }
 
-    /* ===== 모달 (제안 제출용) ===== */
     function openProposalModal() {
       document.getElementById("proposalText").value = document.getElementById("notepad").innerText;
       document.getElementById("proposalModal").style.display = "block";
@@ -534,63 +538,70 @@
       document.getElementById("proposalModal").style.display = "none";
     }
 
-    /* ===== 공유 기능: SimplePeer 신호 교환 (Offer/Answer) – JSON 문자열로 직접 교환 ===== */
+    /* ===== 공유 기능 (SimplePeer, 5글자 신호 코드) ===== */
     let peer = null;
-    // Offer 생성 (간단하게 JSON 문자열 출력)
+    let currentOfferCode = "";
+    // Offer 생성: 5글자 코드 생성 후, 전체 offer 신호를 localStorage에 저장하고 코드 출력
     function startOffer() {
       peer = new SimplePeer({ initiator: true, trickle: false });
       peer.on('signal', data => {
-        const offerSignal = JSON.stringify(data);
-        prompt("Offer Signal (복사해서 다른 기기로 보내세요):", offerSignal);
+        currentOfferCode = generateCode(5);
+        localStorage.setItem("offer_" + currentOfferCode, JSON.stringify(data));
+        alert("Offer Code: " + currentOfferCode);
       });
-      peer.on('connect', () => {
-        alert("연결 완료: 변경 내용이 실시간 공유됩니다.");
-      });
+      peer.on('connect', () => { alert("연결 완료!"); });
       peer.on('data', data => {
-        const received = data.toString();
-        document.getElementById("notepad").innerHTML = received;
+        document.getElementById("notepad").innerHTML = data.toString();
         saveActiveTabContent();
       });
     }
-
-    // Offer 쪽에서 Answer 신호 입력받기
-    function setAnswer() {
-      const answerSignal = prompt("Answer Signal을 입력하세요:");
-      if (answerSignal) {
-        try {
-          const answerData = JSON.parse(answerSignal);
-          peer.signal(answerData);
-        } catch (e) {
-          alert("올바른 값을 입력하세요.");
-        }
-      }
-    }
-
-    // Answer 생성 (Offer 신호를 입력받아 답변 신호 생성)
+    // Answer 측: offer 코드를 입력받아, 저장된 offer 신호를 불러온 후 signal 처리, 그리고 answer 신호를 생성해 5글자로 출력
     function startAnswer() {
-      peer = new SimplePeer({ initiator: false, trickle: false });
-      const offerSignal = prompt("Offer Signal을 입력하세요:");
-      if (offerSignal) {
-        try {
-          const offerData = JSON.parse(offerSignal);
-          peer.signal(offerData);
-        } catch (e) {
-          alert("올바른 값을 입력하세요.");
-          return;
-        }
+      const offerCode = prompt("Offer 코드를 입력하세요 (5글자):");
+      if (!offerCode) return;
+      const offerSignalStr = localStorage.getItem("offer_" + offerCode);
+      if (!offerSignalStr) {
+        alert("해당 offer 코드가 없습니다.");
+        return;
       }
+      const offerData = JSON.parse(offerSignalStr);
+      peer = new SimplePeer({ initiator: false, trickle: false });
+      peer.signal(offerData);
       peer.on('signal', data => {
-        const answerSignal = JSON.stringify(data);
-        prompt("Answer Signal (복사해서 Offer 쪽에 보내세요):", answerSignal);
+        const answerCode = generateCode(5);
+        localStorage.setItem("answer_" + offerCode, JSON.stringify(data));
+        alert("Answer Code: " + answerCode);
       });
-      peer.on('connect', () => {
-        alert("연결 완료: 변경 내용이 실시간 공유됩니다.");
-      });
+      peer.on('connect', () => { alert("연결 완료!"); });
       peer.on('data', data => {
-        const received = data.toString();
-        document.getElementById("notepad").innerHTML = received;
+        document.getElementById("notepad").innerHTML = data.toString();
         saveActiveTabContent();
       });
+    }
+    // Offer 측: answer 코드를 입력받아, 해당 answer 신호를 불러와서 연결
+    function setAnswer() {
+      const answerCode = prompt("Answer 코드를 입력하세요 (5글자 for offer " + currentOfferCode + "):");
+      if (!answerCode) return;
+      const answerSignalStr = localStorage.getItem("answer_" + currentOfferCode);
+      if (!answerSignalStr) {
+        alert("해당 answer 코드가 없습니다.");
+        return;
+      }
+      try {
+        const answerData = JSON.parse(answerSignalStr);
+        peer.signal(answerData);
+      } catch (e) {
+        alert("답변 신호 처리 중 오류.");
+      }
+    }
+    // 5글자 코드 생성 함수
+    function generateCode(length) {
+      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      let code = "";
+      for (let i = 0; i < length; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return code;
     }
 
     window.addEventListener("DOMContentLoaded", function() {
@@ -602,6 +613,7 @@
         window.history.replaceState({}, document.title, window.location.pathname);
       }
       loadActiveTabContent();
+      initTabs();
     });
   </script>
 </body>
