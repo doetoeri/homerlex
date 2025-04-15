@@ -18,12 +18,12 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.3.2/peerjs.min.js"></script>
   
   <style>
-    /* Self-hosted Aptos Display font */
+    /* Self-hosted Inter SemiBold Font */
     @font-face {
-      font-family: 'Aptos Display';
-      src: url('AptosDisplay-Regular.woff2') format('woff2'),
-           url('AptosDisplay-Regular.woff') format('woff');
-      font-weight: normal;
+      font-family: 'Inter';
+      src: url('InterSemiBold.woff2') format('woff2'),
+           url('InterSemiBold.woff') format('woff');
+      font-weight: 600;
       font-style: normal;
       font-display: swap;
     }
@@ -36,8 +36,9 @@
       --copilot-on-surface: #323130;
       /* Smooth gradient background */
       --copilot-background: linear-gradient(135deg, #E3F2FD, #FFFFFF);
-      --copilot-corner-radius: 16px;
-      --copilot-font-family: 'Aptos Display', sans-serif;
+      /* 라운드를 더 줌: 24px로 변경 */
+      --copilot-corner-radius: 24px;
+      --copilot-font-family: 'Inter', sans-serif;
       --copilot-font-size: 16px;
       --toolbar-gap: 12px;
       --tab-margin: 8px;
@@ -156,7 +157,7 @@
       min-height: 400px;
       white-space: normal;
       word-wrap: break-word;
-      text-align: left; /* Editor content remains left-aligned */
+      text-align: left; /* 에디터 내용은 좌측 정렬 */
     }
     .notepad p {
       margin: 0 0 1em 0;
@@ -295,7 +296,7 @@
       background: var(--copilot-primary);
       color: var(--copilot-on-primary);
       border: none;
-      border-radius: 4px;
+      border-radius: var(--copilot-corner-radius);
       cursor: pointer;
       font-size: var(--copilot-font-size);
       transition: background-color 0.2s ease, transform 0.1s ease;
@@ -589,7 +590,6 @@
       if (!selection.rangeCount) return;
       const range = selection.getRangeAt(0);
       
-      // If selection is within an existing highlight-btn, unwrap (toggle off)
       if (selection.anchorNode && selection.anchorNode.parentElement &&
           selection.focusNode && selection.focusNode.parentElement &&
           selection.anchorNode.parentElement === selection.focusNode.parentElement &&
