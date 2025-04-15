@@ -6,13 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Homerlex-Next Notepad - A Revolutionary Note-Taking Experience</title>
   <!-- Enhanced Meta Tags for SEO & AdSense -->
-  <meta name="description" content="Homerlex-Next Notepad features sleek glassmorphism design, innovative text conversion, real-time sync, and an intuitive interface. Once you try it, you'll never want to work without it.">
+  <meta name="description" content="Homerlex-Next Notepad features a sleek glassmorphism design, innovative text conversion, real-time sync, and an intuitive interface. Once you try it, you'll never want to work without it.">
   <meta name="keywords" content="Homerlex, Notepad, glassmorphism, note-taking, productivity, real-time sync, innovative, creative, sticky">
   <!-- Favicon: logo.png -->
   <link rel="icon" type="image/png" href="logo.png">
   
-  <!-- Pretendard Font CDN -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <!-- Aptos Display Font CDN -->
+  <link href="https://fonts.googleapis.com/css2?family=Aptos+Display&display=swap" rel="stylesheet">
   
   <!-- Material Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -30,7 +30,7 @@
       /* Smooth gradient background */
       --copilot-background: linear-gradient(135deg, #E3F2FD, #FFFFFF);
       --copilot-corner-radius: 16px;
-      --copilot-font-family: 'Pretendard', sans-serif;
+      --copilot-font-family: 'Aptos Display', sans-serif;
       --copilot-font-size: 16px;
       --toolbar-gap: 12px;
       --tab-margin: 8px;
@@ -59,6 +59,21 @@
       color: var(--copilot-primary);
       margin-top: 5px;
     }
+    /* Change Channel button in header */
+    #changeChannelBtn {
+      margin-top: 10px;
+      padding: var(--md3-button-padding);
+      background: var(--copilot-primary);
+      border: none;
+      border-radius: var(--copilot-corner-radius);
+      color: var(--copilot-on-primary);
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    #changeChannelBtn:hover {
+      background: var(--copilot-on-primary);
+      color: var(--copilot-primary);
+    }
     
     /* Navigation TabBar */
     nav#tabBar {
@@ -75,10 +90,11 @@
       border-radius: var(--copilot-corner-radius);
       cursor: pointer;
       transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 4px;
       backdrop-filter: blur(10px);
+      position: relative;
     }
     .tab-btn:hover {
       background: rgba(255, 255, 255, 0.6);
@@ -97,8 +113,26 @@
       border: none;
       padding: 8px;
     }
+    /* Close button on each tab */
+    .close-btn {
+      margin-left: 8px;
+      color: red;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 14px;
+    }
     
-    /* Notepad Container with glassmorphism effect */
+    /* Card Containers: center aligned */
+    main section,
+    #sharedSyncContainer,
+    #about {
+      text-align: center;
+    }
+    
+    /* Notepad Section: Container centered; editor text left aligned */
+    #notepadSection {
+      text-align: center;
+    }
     #notepadContainer {
       position: relative;
       width: 80%;
@@ -115,6 +149,7 @@
       min-height: 400px;
       white-space: normal;
       word-wrap: break-word;
+      text-align: left; /* Editor content remains left-aligned */
     }
     .notepad p {
       margin: 0 0 1em 0;
@@ -160,7 +195,7 @@
     .format-btn .material-icons {
       font-size: 24px;
     }
-    /* Conversion Button now uses an icon */
+    /* Conversion Button uses icon only */
     #convertBtn {
       background: var(--copilot-primary);
       color: var(--copilot-on-primary);
@@ -229,6 +264,7 @@
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.3);
       box-shadow: 0 4px 16px rgba(31, 38, 135, 0.2);
+      text-align: center;
     }
     #sharedSyncContainer h2 {
       margin-top: 0;
@@ -262,7 +298,7 @@
       color: var(--copilot-primary);
     }
     
-    /* Additional Content Sections */
+    /* Additional Content Sections (e.g. About) */
     main section {
       width: 80%;
       max-width: 800px;
@@ -273,6 +309,7 @@
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.3);
       box-shadow: 0 4px 16px rgba(31, 38, 135, 0.2);
+      text-align: center;
     }
     main section h2 {
       color: var(--copilot-primary);
@@ -288,7 +325,7 @@
     }
     
     /* Responsive adjustments for mobile:
-       - Force toolbar to remain horizontal */
+       - Keep toolbar horizontal */
     @media screen and (max-width: 600px) {
       body {
         margin: 10px;
@@ -320,11 +357,13 @@
     <img src="logo.png" alt="Homerlex Logo" class="logo">
     <h1>Homerlex-Next Notepad</h1>
     <p class="tagline">Revolutionize your note-taking experience</p>
+    <button id="changeChannelBtn" class="md3-button">Change Channel</button>
   </header>
   
   <!-- Navigation TabBar -->
   <nav id="tabBar">
-    <button class="tab-btn active" data-tab="1">Document 1</button>
+    <!-- Initial tab with a close button -->
+    <button class="tab-btn active" data-tab="1">Document 1<span class="close-btn">×</span></button>
     <button class="tab-btn new-tab" id="newTabBtn">
       <span class="material-icons">add</span>
     </button>
@@ -389,7 +428,7 @@
     <section id="about">
       <h2>About Homerlex-Next Notepad</h2>
       <p>
-        Homerlex-Next Notepad is not just another note app—it’s a productivity revolution. With its sleek glassmorphism design and an intuitive interface, writing and organizing your thoughts becomes an inspiring ritual.
+        Homerlex-Next Notepad is not just another note app—it’s a productivity revolution. With its sleek glassmorphism design and intuitive interface, writing and organizing your thoughts becomes an inspiring ritual.
       </p>
       <p>
         Enjoy real-time syncing across all your devices and a unique text conversion feature that transforms your notes into interactive elements. Once you immerse yourself in its seamless experience, you'll wonder how you ever managed without it.
@@ -469,7 +508,6 @@
     // ── Notification Feature: Show Desktop Notification if Page is Hidden ──
     function updateSharedContentLocal(data) {
       document.getElementById("sharedContent").value = data.content;
-      // If the page is hidden, send a desktop notification
       if (document.hidden && "Notification" in window) {
         if (Notification.permission === "granted") {
           new Notification("New Sync Update", {
@@ -518,10 +556,18 @@
       if (storedContent !== null) {
         notepad.innerHTML = storedContent;
       }
-      // Request Notification permission on page load if available
       if ("Notification" in window && Notification.permission === "default") {
         Notification.requestPermission();
       }
+      // Ensure existing tabs have a close button; if not, add one.
+      document.querySelectorAll('.tab-btn:not(.new-tab)').forEach(tab => {
+         if (!tab.querySelector('.close-btn')) {
+           let closeSpan = document.createElement('span');
+           closeSpan.className = "close-btn";
+           closeSpan.textContent = "×";
+           tab.appendChild(closeSpan);
+         }
+      });
     });
     
     function execCmd(command) {
@@ -534,7 +580,6 @@
       if (!selection.rangeCount) return;
       const range = selection.getRangeAt(0);
       
-      // If selection is within an existing highlight-btn, unwrap (toggle off)
       if (selection.anchorNode && selection.anchorNode.parentElement &&
           selection.focusNode && selection.focusNode.parentElement &&
           selection.anchorNode.parentElement === selection.focusNode.parentElement &&
@@ -549,7 +594,6 @@
       const selectedText = range.toString().trim();
       if (!selectedText) return;
       
-      // Convert each line into a text button (prevent duplicate conversion)
       const fragment = document.createDocumentFragment();
       selectedText.split(/\n/).forEach(line => {
         const trimmedLine = line.trim();
@@ -567,10 +611,48 @@
       selection.removeAllRanges();
     });
     
+    // TabBar Event Delegation
     const tabBar = document.getElementById('tabBar');
     tabBar.addEventListener('click', function(e) {
-      const tab = e.target.closest('.tab-btn');
-      if (tab && !tab.classList.contains('new-tab')) {
+      // If the close button is clicked, delete the tab.
+      if (e.target.classList.contains('close-btn')) {
+        e.stopPropagation();
+        const tab = e.target.parentElement;
+        const tabId = tab.dataset.tab;
+        // Remove tab content localStorage
+        localStorage.removeItem("notepad-content-" + tabId);
+        // If the deleted tab was active, switch to the first available tab.
+        const wasActive = tab.classList.contains('active');
+        tab.remove();
+        if (wasActive) {
+          let firstTab = document.querySelector('.tab-btn:not(.new-tab)');
+          if (firstTab) {
+            firstTab.classList.add('active');
+            activeTab = firstTab.dataset.tab;
+            const content = localStorage.getItem("notepad-content-" + activeTab);
+            notepad.innerHTML = content !== null ? content : "";
+          } else {
+            // If no tab remains, create a new one.
+            const newTab = document.createElement('button');
+            newTab.className = 'tab-btn active';
+            newTab.dataset.tab = "1";
+            newTab.textContent = "Document 1";
+            let closeSpan = document.createElement('span');
+            closeSpan.className = "close-btn";
+            closeSpan.textContent = "×";
+            newTab.appendChild(closeSpan);
+            tabBar.insertBefore(newTab, document.getElementById('newTabBtn'));
+            activeTab = "1";
+            localStorage.setItem("notepad-content-1", "");
+            notepad.innerHTML = "";
+          }
+        }
+        return;
+      }
+      
+      // If a tab (other than new-tab) is clicked, set it as active.
+      const tab = e.target.closest('.tab-btn:not(.new-tab)');
+      if (tab) {
         localStorage.setItem("notepad-content-" + activeTab, notepad.innerHTML);
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         tab.classList.add('active');
@@ -581,22 +663,29 @@
       }
     });
     
+    // New Tab Creation
     document.getElementById('newTabBtn').addEventListener('click', function() {
-      const newCount = document.querySelectorAll('.tab-btn').length;
+      const newCount = document.querySelectorAll('.tab-btn:not(.new-tab)').length + 1;
       const newTab = document.createElement('button');
       newTab.className = 'tab-btn';
-      newTab.textContent = `Document ${newCount}`;
       newTab.dataset.tab = newCount;
+      newTab.textContent = `Document ${newCount}`;
+      let closeSpan = document.createElement("span");
+      closeSpan.className = "close-btn";
+      closeSpan.textContent = "×";
+      newTab.appendChild(closeSpan);
       tabBar.insertBefore(newTab, this);
       localStorage.setItem("notepad-content-" + newCount, "");
     });
     
+    // Tab Name Change on Double Click (excluding new-tab)
     tabBar.addEventListener('dblclick', function(e) {
-      const btn = e.target.closest('.tab-btn');
-      if (btn && !btn.classList.contains('new-tab')) {
-        const newName = prompt("Enter a new tab name", btn.textContent);
+      const tab = e.target.closest('.tab-btn:not(.new-tab)');
+      if (tab) {
+        const newName = prompt("Enter a new tab name", tab.firstChild.textContent.trim());
         if (newName && newName.trim() !== "") {
-          btn.textContent = newName.trim();
+          // Preserve the close button by separating text nodes.
+          tab.firstChild.textContent = newName.trim();
         }
       }
     });
@@ -616,7 +705,7 @@
         inputField.type = "text";
         inputField.placeholder = "Enter your explanation here...";
         inputField.addEventListener("keydown", function(e) {
-          if (e.key === "Enter") {
+          if(e.key === "Enter") {
             e.preventDefault();
             const text = inputField.value;
             if (!text.trim()){
@@ -630,6 +719,17 @@
         btn.parentNode.insertBefore(explanationBox, btn.nextSibling);
       }
     }
+    
+    // ── Channel Change Functionality ──
+    document.getElementById('changeChannelBtn').addEventListener('click', function() {
+      const newChannel = prompt("Enter a new Channel ID:", groupID);
+      if (newChannel && newChannel.trim() !== "" && newChannel.trim() !== groupID) {
+        localStorage.setItem('groupID', newChannel.trim());
+        // Optionally, clear previous deviceSeed if you want a fresh start:
+        localStorage.removeItem('deviceSeed');
+        location.reload();
+      }
+    });
   </script>
 </body>
 </html>
