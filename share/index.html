@@ -8,7 +8,7 @@
   <!-- Enhanced Meta Tags for SEO & AdSense -->
   <meta name="description" content="Homerlex-Next Notepad features sleek glassmorphism design, innovative text conversion, real-time sync, and an intuitive interface. Once you try it, you'll never want to work without it.">
   <meta name="keywords" content="Homerlex, Notepad, glassmorphism, note-taking, productivity, real-time sync, innovative, creative, sticky">
-  <!-- Favicon now set as logo.png -->
+  <!-- Favicon: logo.png -->
   <link rel="icon" type="image/png" href="logo.png">
   
   <!-- Pretendard Font CDN -->
@@ -287,7 +287,8 @@
       color: var(--copilot-on-surface);
     }
     
-    /* Responsive adjustments for mobile */
+    /* Responsive adjustments for mobile:
+       - Force toolbar to remain horizontal */
     @media screen and (max-width: 600px) {
       body {
         margin: 10px;
@@ -295,7 +296,6 @@
       #notepadContainer, #sharedSyncContainer, main section {
         width: 100%;
       }
-      /* On mobile, keep toolbar horizontal */
       #toolbar {
         flex-direction: row;
         justify-content: center;
@@ -466,8 +466,27 @@
       });
     }
     
+    // ── Notification Feature: Show Desktop Notification if Page is Hidden ──
     function updateSharedContentLocal(data) {
       document.getElementById("sharedContent").value = data.content;
+      // If the page is hidden, send a desktop notification
+      if (document.hidden && "Notification" in window) {
+        if (Notification.permission === "granted") {
+          new Notification("New Sync Update", {
+            body: "A new sync update has been received from another device.",
+            icon: "logo.png"
+          });
+        } else if (Notification.permission !== "denied") {
+          Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+              new Notification("New Sync Update", {
+                body: "A new sync update has been received from another device.",
+                icon: "logo.png"
+              });
+            }
+          });
+        }
+      }
     }
     
     document.getElementById("syncButton").addEventListener("click", function() {
@@ -498,6 +517,10 @@
       const storedContent = localStorage.getItem("notepad-content-" + activeTab);
       if (storedContent !== null) {
         notepad.innerHTML = storedContent;
+      }
+      // Request Notification permission on page load if available
+      if ("Notification" in window && Notification.permission === "default") {
+        Notification.requestPermission();
       }
     });
     
