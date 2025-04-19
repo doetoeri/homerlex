@@ -2,14 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!-- 모바일 최적화 -->
+  <!-- Mobile Optimization -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Homerlex-Next Notepad - A Revolutionary Note-Taking Experience</title>
-  <!-- SEO Meta Tags -->
-  <meta name="description" content="Homerlex-Next Notepad features a sleek glassmorphism design, innovative text conversion, real-time sync, and an intuitive interface. Once you try it, you'll never want to work without it.">
+  <!-- Enhanced Meta Tags for SEO & AdSense -->
+  <meta name="description" content="Homerlex-Next Notepad features sleek glassmorphism design, innovative text conversion, real-time sync, and an intuitive interface. Once you try it, you'll never want to work without it.">
   <meta name="keywords" content="Homerlex, Notepad, glassmorphism, note-taking, productivity, real-time sync, innovative, creative, sticky">
   <!-- Favicon: logo.png -->
   <link rel="icon" type="image/png" href="logo.png">
+  
+  <!-- Pretendard Font CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
   
   <!-- Material Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -18,16 +21,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.3.2/peerjs.min.js"></script>
   
   <style>
-    /* Self-hosted Inter SemiBold Font */
-    @font-face {
-      font-family: 'Inter';
-      src: url('InterSemiBold.woff2') format('woff2'),
-           url('InterSemiBold.woff') format('woff');
-      font-weight: 600;
-      font-style: normal;
-      font-display: swap;
-    }
-    
     :root {
       --copilot-primary: #0078D4;
       --copilot-on-primary: #ffffff;
@@ -36,9 +29,8 @@
       --copilot-on-surface: #323130;
       /* Smooth gradient background */
       --copilot-background: linear-gradient(135deg, #E3F2FD, #FFFFFF);
-      /* UI 모서리 라운드 값 24px */
-      --copilot-corner-radius: 24px;
-      --copilot-font-family: 'Inter', sans-serif;
+      --copilot-corner-radius: 16px;
+      --copilot-font-family: 'Pretendard', sans-serif;
       --copilot-font-size: 16px;
       --toolbar-gap: 12px;
       --tab-margin: 8px;
@@ -67,23 +59,8 @@
       color: var(--copilot-primary);
       margin-top: 5px;
     }
-    /* 채널 변경 버튼 */
-    #changeChannelBtn {
-      margin-top: 10px;
-      padding: var(--md3-button-padding);
-      background: var(--copilot-primary);
-      border: none;
-      border-radius: var(--copilot-corner-radius);
-      color: var(--copilot-on-primary);
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-    }
-    #changeChannelBtn:hover {
-      background: var(--copilot-on-primary);
-      color: var(--copilot-primary);
-    }
     
-    /* 탭바 */
+    /* Navigation TabBar */
     nav#tabBar {
       display: flex;
       justify-content: center;
@@ -98,11 +75,10 @@
       border-radius: var(--copilot-corner-radius);
       cursor: pointer;
       transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s;
-      display: inline-flex;
+      display: flex;
       align-items: center;
       gap: 4px;
       backdrop-filter: blur(10px);
-      position: relative;
     }
     .tab-btn:hover {
       background: rgba(255, 255, 255, 0.6);
@@ -121,26 +97,8 @@
       border: none;
       padding: 8px;
     }
-    /* 탭 삭제 버튼 */
-    .close-btn {
-      margin-left: 8px;
-      color: red;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 14px;
-    }
     
-    /* 카드형 컨테이너 가운데 정렬 */
-    main section,
-    #sharedSyncContainer,
-    #about {
-      text-align: center;
-    }
-    
-    /* 메모장 섹션 */
-    #notepadSection {
-      text-align: center;
-    }
+    /* Notepad Container with glassmorphism effect */
     #notepadContainer {
       position: relative;
       width: 80%;
@@ -157,14 +115,13 @@
       min-height: 400px;
       white-space: normal;
       word-wrap: break-word;
-      text-align: left;
     }
     .notepad p {
       margin: 0 0 1em 0;
       line-height: 1.5;
     }
     
-    /* 하단 툴바 */
+    /* Bottom Toolbar */
     #toolbar {
       display: flex;
       justify-content: center;
@@ -203,7 +160,7 @@
     .format-btn .material-icons {
       font-size: 24px;
     }
-    /* 변환 버튼 (아이콘 전용) */
+    /* Conversion Button now uses an icon */
     #convertBtn {
       background: var(--copilot-primary);
       color: var(--copilot-on-primary);
@@ -219,7 +176,7 @@
       color: var(--copilot-primary);
     }
     
-    /* 변환된 텍스트 버튼 */
+    /* Styled Text Button */
     .highlight-btn {
       display: inline-block;
       white-space: pre-wrap;
@@ -236,7 +193,7 @@
       transform: scale(0.97);
     }
     
-    /* 설명 입력창 */
+    /* Explanation input box */
     .explanation-box {
       background: var(--copilot-surface);
       border-radius: var(--copilot-corner-radius);
@@ -261,7 +218,7 @@
       background-color: #ffffff;
     }
     
-    /* 실시간 동기화 영역 */
+    /* Real-Time Sync Section */
     #sharedSyncContainer {
       width: 80%;
       max-width: 800px;
@@ -272,7 +229,6 @@
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.3);
       box-shadow: 0 4px 16px rgba(31, 38, 135, 0.2);
-      text-align: center;
     }
     #sharedSyncContainer h2 {
       margin-top: 0;
@@ -296,7 +252,7 @@
       background: var(--copilot-primary);
       color: var(--copilot-on-primary);
       border: none;
-      border-radius: var(--copilot-corner-radius);
+      border-radius: 4px;
       cursor: pointer;
       font-size: var(--copilot-font-size);
       transition: background-color 0.2s ease, transform 0.1s ease;
@@ -306,7 +262,7 @@
       color: var(--copilot-primary);
     }
     
-    /* About 섹션 등 추가 콘텐츠 */
+    /* Additional Content Sections */
     main section {
       width: 80%;
       max-width: 800px;
@@ -317,14 +273,13 @@
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.3);
       box-shadow: 0 4px 16px rgba(31, 38, 135, 0.2);
-      text-align: center;
     }
     main section h2 {
       color: var(--copilot-primary);
       margin-top: 0;
     }
     
-    /* 푸터 */
+    /* Footer Area */
     footer {
       text-align: center;
       margin-top: 40px;
@@ -332,10 +287,15 @@
       color: var(--copilot-on-surface);
     }
     
-    /* 모바일 반응형: 툴바는 항상 가로 방향 */
+    /* Responsive adjustments for mobile:
+       - Force toolbar to remain horizontal */
     @media screen and (max-width: 600px) {
-      body { margin: 10px; }
-      #notepadContainer, #sharedSyncContainer, main section { width: 100%; }
+      body {
+        margin: 10px;
+      }
+      #notepadContainer, #sharedSyncContainer, main section {
+        width: 100%;
+      }
       #toolbar {
         flex-direction: row;
         justify-content: center;
@@ -344,34 +304,35 @@
         width: auto;
         margin: 0 4px;
       }
-      .logo { max-width: 80px; }
-      .tagline { font-size: 16px; }
+      .logo {
+        max-width: 80px;
+      }
+      .tagline {
+        font-size: 16px;
+      }
     }
   </style>
 </head>
+
 <body>
-  <!-- 헤더 -->
+  <!-- Header Area -->
   <header>
     <img src="logo.png" alt="Homerlex Logo" class="logo">
     <h1>Homerlex-Next Notepad</h1>
     <p class="tagline">Revolutionize your note-taking experience</p>
-    <button id="changeChannelBtn" class="md3-button">Change Channel</button>
   </header>
   
-  <!-- 탭바 -->
+  <!-- Navigation TabBar -->
   <nav id="tabBar">
-    <!-- 초기 탭 (닫기 버튼 포함) -->
-    <button class="tab-btn active" data-tab="1">
-      Document 1<span class="close-btn">×</span>
-    </button>
+    <button class="tab-btn active" data-tab="1">Document 1</button>
     <button class="tab-btn new-tab" id="newTabBtn">
       <span class="material-icons">add</span>
     </button>
   </nav>
   
-  <!-- 메인 콘텐츠 -->
+  <!-- Main Content Area -->
   <main>
-    <!-- 메모장 섹션 -->
+    <!-- Notepad Section -->
     <section id="notepadSection">
       <h2>Your Creative Workspace</h2>
       <div id="notepadContainer">
@@ -385,8 +346,9 @@
         </div>
       </div>
       
-      <!-- 포맷팅 툴바 -->
+      <!-- Formatting Toolbar -->
       <div id="toolbar">
+        <!-- Conversion Button (Icon Only) -->
         <button id="convertBtn" class="md3-button">
           <span class="material-icons">text_fields</span>
         </button>
@@ -414,7 +376,7 @@
       </div>
     </section>
     
-    <!-- 실시간 동기화 섹션 -->
+    <!-- Real-Time Sync Section -->
     <section id="sharedSyncSection">
       <div id="sharedSyncContainer">
         <h2>Real-Time Sync</h2>
@@ -423,11 +385,11 @@
       </div>
     </section>
     
-    <!-- About 섹션 -->
+    <!-- About Section -->
     <section id="about">
       <h2>About Homerlex-Next Notepad</h2>
       <p>
-        Homerlex-Next Notepad is not just another note app—it’s a productivity revolution. With its sleek glassmorphism design and intuitive interface, writing and organizing your thoughts becomes an inspiring ritual.
+        Homerlex-Next Notepad is not just another note app—it’s a productivity revolution. With its sleek glassmorphism design and an intuitive interface, writing and organizing your thoughts becomes an inspiring ritual.
       </p>
       <p>
         Enjoy real-time syncing across all your devices and a unique text conversion feature that transforms your notes into interactive elements. Once you immerse yourself in its seamless experience, you'll wonder how you ever managed without it.
@@ -438,14 +400,14 @@
     </section>
   </main>
   
-  <!-- 푸터 -->
+  <!-- Footer Area -->
   <footer>
     <p>&copy; 2025 Homerlex. All rights reserved.</p>
     <p>Contact: support@homerlex.com</p>
   </footer>
   
   <script>
-    // ── 1. 고유 시드 생성 ──
+    // ── 1. Generate Unique Seeds and Group Identification ──
     function generateUUID() {
       return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
         var r = crypto.getRandomValues(new Uint8Array(1))[0] % 16;
@@ -465,9 +427,9 @@
     }
     console.log("Device Seed:", deviceSeed, "Group:", groupID);
     
-    // ── 2. PeerJS 동기화 연결 설정 ──
+    // ── 2. Establish PeerJS Sync Connections ──
     var isHost = confirm("Make this device the host? (OK for Yes, Cancel for No)");
-    var hostId = groupID + "-host";
+    var hostId = groupID + "-host"; // Fixed Host ID for the group
     var peerId = isHost ? hostId : groupID + "-" + deviceSeed.split("-").pop();
     
     var myPeer = new Peer(peerId);
@@ -476,13 +438,11 @@
     
     myPeer.on('open', function(id) {
       console.log("PeerJS connected. My ID:", id);
-      console.log("isHost:", isHost);
       if (isHost) {
         myPeer.on('connection', function(conn) {
           console.log("Client connected:", conn.peer);
           connections.push(conn);
           conn.on('data', function(data) {
-            console.log("Host received data from", conn.peer, ":", data);
             updateSharedContentLocal(data);
             broadcastSharedData(data, conn);
           });
@@ -491,10 +451,9 @@
         hostConn = myPeer.connect(hostId);
         hostConn.on('open', function() {
           console.log("Connected to host:", hostId);
-        });
-        hostConn.on('data', function(data) {
-          console.log("Client received data:", data);
-          updateSharedContentLocal(data);
+          hostConn.on('data', function(data) {
+            updateSharedContentLocal(data);
+          });
         });
       }
     });
@@ -507,9 +466,10 @@
       });
     }
     
-    // ── 데스크탑 알림 (페이지가 숨겨진 경우) ──
+    // ── Notification Feature: Show Desktop Notification if Page is Hidden ──
     function updateSharedContentLocal(data) {
       document.getElementById("sharedContent").value = data.content;
+      // If the page is hidden, send a desktop notification
       if (document.hidden && "Notification" in window) {
         if (Notification.permission === "granted") {
           new Notification("New Sync Update", {
@@ -532,22 +492,20 @@
     document.getElementById("syncButton").addEventListener("click", function() {
       var content = document.getElementById("sharedContent").value;
       var data = { content: content };
-      console.log("Sync button clicked. Data:", data);
       if (isHost) {
         updateSharedContentLocal(data);
         broadcastSharedData(data);
       } else {
         if (hostConn && hostConn.open) {
           hostConn.send(data);
-          console.log("Data sent via hostConn");
         } else {
           alert("Not yet connected to the host.");
-          console.log("Host connection not open. Data not sent.");
         }
       }
+      console.log("Sync sent:", data);
     });
     
-    // ── 메모장 및 탭 기능 ──
+    // ── 3. Notepad Functionality (Tabs, Formatting, Text Conversion) ──
     let activeTab = "1";
     const notepad = document.getElementById('notepad');
     
@@ -560,30 +518,23 @@
       if (storedContent !== null) {
         notepad.innerHTML = storedContent;
       }
+      // Request Notification permission on page load if available
       if ("Notification" in window && Notification.permission === "default") {
         Notification.requestPermission();
       }
-      // 기존 탭에 닫기 버튼이 없으면 추가
-      document.querySelectorAll('.tab-btn:not(.new-tab)').forEach(tab => {
-         if (!tab.querySelector('.close-btn')) {
-           let closeSpan = document.createElement('span');
-           closeSpan.className = "close-btn";
-           closeSpan.textContent = "×";
-           tab.appendChild(closeSpan);
-         }
-      });
     });
     
     function execCmd(command) {
       document.execCommand(command, false, null);
     }
     
-    // 텍스트 변환 (토글 기능 포함)
+    // Text Conversion Button Click Event with toggle functionality
     document.getElementById('convertBtn').addEventListener('click', function() {
       const selection = window.getSelection();
       if (!selection.rangeCount) return;
       const range = selection.getRangeAt(0);
       
+      // If selection is within an existing highlight-btn, unwrap (toggle off)
       if (selection.anchorNode && selection.anchorNode.parentElement &&
           selection.focusNode && selection.focusNode.parentElement &&
           selection.anchorNode.parentElement === selection.focusNode.parentElement &&
@@ -598,6 +549,7 @@
       const selectedText = range.toString().trim();
       if (!selectedText) return;
       
+      // Convert each line into a text button (prevent duplicate conversion)
       const fragment = document.createDocumentFragment();
       selectedText.split(/\n/).forEach(line => {
         const trimmedLine = line.trim();
@@ -615,45 +567,10 @@
       selection.removeAllRanges();
     });
     
-    // 탭바 이벤트 위임
     const tabBar = document.getElementById('tabBar');
     tabBar.addEventListener('click', function(e) {
-      // 닫기 버튼 클릭 시 탭 삭제
-      if (e.target.classList.contains('close-btn')) {
-        e.stopPropagation();
-        const tab = e.target.parentElement;
-        const tabId = tab.dataset.tab;
-        localStorage.removeItem("notepad-content-" + tabId);
-        const wasActive = tab.classList.contains('active');
-        tab.remove();
-        if (wasActive) {
-          let firstTab = document.querySelector('.tab-btn:not(.new-tab)');
-          if (firstTab) {
-            firstTab.classList.add('active');
-            activeTab = firstTab.dataset.tab;
-            const content = localStorage.getItem("notepad-content-" + activeTab);
-            notepad.innerHTML = content !== null ? content : "";
-          } else {
-            const newTab = document.createElement('button');
-            newTab.className = 'tab-btn active';
-            newTab.dataset.tab = "1";
-            newTab.textContent = "Document 1";
-            let closeSpan = document.createElement('span');
-            closeSpan.className = "close-btn";
-            closeSpan.textContent = "×";
-            newTab.appendChild(closeSpan);
-            tabBar.insertBefore(newTab, document.getElementById('newTabBtn'));
-            activeTab = "1";
-            localStorage.setItem("notepad-content-1", "");
-            notepad.innerHTML = "";
-          }
-        }
-        return;
-      }
-      
-      // 일반 탭 클릭 시 활성화
-      const tab = e.target.closest('.tab-btn:not(.new-tab)');
-      if (tab) {
+      const tab = e.target.closest('.tab-btn');
+      if (tab && !tab.classList.contains('new-tab')) {
         localStorage.setItem("notepad-content-" + activeTab, notepad.innerHTML);
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         tab.classList.add('active');
@@ -664,28 +581,22 @@
       }
     });
     
-    // 새 탭 생성
     document.getElementById('newTabBtn').addEventListener('click', function() {
-      const newCount = document.querySelectorAll('.tab-btn:not(.new-tab)').length + 1;
+      const newCount = document.querySelectorAll('.tab-btn').length;
       const newTab = document.createElement('button');
       newTab.className = 'tab-btn';
-      newTab.dataset.tab = newCount;
       newTab.textContent = `Document ${newCount}`;
-      let closeSpan = document.createElement("span");
-      closeSpan.className = "close-btn";
-      closeSpan.textContent = "×";
-      newTab.appendChild(closeSpan);
+      newTab.dataset.tab = newCount;
       tabBar.insertBefore(newTab, this);
       localStorage.setItem("notepad-content-" + newCount, "");
     });
     
-    // 탭 이름 변경 (더블클릭)
     tabBar.addEventListener('dblclick', function(e) {
-      const tab = e.target.closest('.tab-btn:not(.new-tab)');
-      if (tab) {
-        const newName = prompt("Enter a new tab name", tab.firstChild.textContent.trim());
+      const btn = e.target.closest('.tab-btn');
+      if (btn && !btn.classList.contains('new-tab')) {
+        const newName = prompt("Enter a new tab name", btn.textContent);
         if (newName && newName.trim() !== "") {
-          tab.firstChild.textContent = newName.trim();
+          btn.textContent = newName.trim();
         }
       }
     });
@@ -705,7 +616,7 @@
         inputField.type = "text";
         inputField.placeholder = "Enter your explanation here...";
         inputField.addEventListener("keydown", function(e) {
-          if(e.key === "Enter") {
+          if (e.key === "Enter") {
             e.preventDefault();
             const text = inputField.value;
             if (!text.trim()){
@@ -719,16 +630,6 @@
         btn.parentNode.insertBefore(explanationBox, btn.nextSibling);
       }
     }
-    
-    // 채널 변경 기능
-    document.getElementById('changeChannelBtn').addEventListener('click', function() {
-      const newChannel = prompt("Enter a new Channel ID:", groupID);
-      if (newChannel && newChannel.trim() !== "" && newChannel.trim() !== groupID) {
-        localStorage.setItem('groupID', newChannel.trim());
-        localStorage.removeItem('deviceSeed');
-        location.reload();
-      }
-    });
   </script>
 </body>
 </html>
